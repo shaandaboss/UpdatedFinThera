@@ -138,8 +138,33 @@ const FinancialTherapyPlatform = () => {
               }
             }
             if (finalTranscript) {
-              setChatInput(finalTranscript.trim());
+              const trimmedTranscript = finalTranscript.trim();
+              setChatInput(trimmedTranscript);
               setIsRecording(false);
+              
+              // Auto-send the voice message
+              setTimeout(() => {
+                if (trimmedTranscript) {
+                  // Create message object
+                  const newMessage = {
+                    type: 'user',
+                    message: trimmedTranscript,
+                    timestamp: new Date()
+                  };
+                  
+                  setChatMessages(prev => [...prev, newMessage]);
+                  
+                  // Store conversation response
+                  setConversationResponses(prev => ({
+                    ...prev,
+                    [currentConversationStep]: trimmedTranscript
+                  }));
+                  
+                  // Clear input and process next step
+                  setChatInput('');
+                  setTimeout(() => processConversationStep(), 1000);
+                }
+              }, 100);
             }
           };
           
@@ -813,51 +838,63 @@ const FinancialTherapyPlatform = () => {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !isRecording && sendMessage()}
-                  placeholder={isRecording ? "🎤 Listening... speak now" : speechRecognition ? "Type or click mic to speak..." : "Type your response..."}
-                  className={`flex-1 bg-gray-700 text-white rounded-xl px-4 py-3 border transition-all focus:outline-none ${
-                    isRecording 
-                      ? 'border-red-500 bg-red-900/20' 
-                      : 'border-gray-600 focus:border-purple-500'
-                  }`}
-                  disabled={isRecording}
-                />
-                
-                {speechRecognition && (
+              {/* Big Record Button Interface */}
+              <div className="flex flex-col items-center gap-4">
+                {speechRecognition && apiKey ? (
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
-                    className={`p-3 rounded-xl transition-all flex items-center justify-center min-w-[48px] ${
+                    className={`w-32 h-32 rounded-full transition-all duration-300 flex flex-col items-center justify-center text-white font-bold text-lg shadow-2xl transform hover:scale-105 ${
                       isRecording 
-                        ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/50' 
-                        : 'bg-blue-500 hover:bg-blue-600 text-white hover:shadow-lg'
+                        ? 'bg-gradient-to-br from-red-500 to-red-600 animate-pulse shadow-red-500/50 border-4 border-red-300' 
+                        : 'bg-gradient-to-br from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 shadow-orange-500/30'
                     }`}
-                    title={isRecording ? 'Click to stop recording' : 'Click to start voice input'}
                   >
                     {isRecording ? (
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
+                      <>
+                        <div className="text-4xl mb-2">⏹️</div>
+                        <div className="text-sm">Stop Recording</div>
+                      </>
                     ) : (
-                      '🎤'
+                      <>
+                        <div className="text-4xl mb-2">🎤</div>
+                        <div className="text-sm">Start Recording</div>
+                      </>
                     )}
                   </button>
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-gray-700 border-2 border-gray-600 flex flex-col items-center justify-center text-gray-400">
+                    <div className="text-4xl mb-2">🔑</div>
+                    <div className="text-xs text-center">API Key Required</div>
+                  </div>
                 )}
-
-                <button
-                  onClick={sendMessage}
-                  disabled={!chatInput.trim() || isRecording}
-                  className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white p-3 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[48px]"
-                  title="Send message"
-                >
-                  ➤
-                </button>
+                
+                <div className="text-center">
+                  {isRecording ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce"></div>
+                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      <div className="text-red-400 font-medium">🎤 Listening... speak now</div>
+                      <div className="text-gray-400 text-sm">Click the button again to stop</div>
+                    </div>
+                  ) : speechRecognition && apiKey ? (
+                    <div className="text-gray-300">
+                      <div className="font-medium">Ready to record your response</div>
+                      <div className="text-sm text-gray-400">Click the microphone to start</div>
+                    </div>
+                  ) : !apiKey ? (
+                    <div className="text-yellow-400">
+                      <div className="font-medium">Enter your API key above to enable voice recording</div>
+                    </div>
+                  ) : (
+                    <div className="text-gray-400">
+                      <div className="font-medium">Voice recording not supported in this browser</div>
+                      <div className="text-sm">Try Chrome, Edge, or Safari</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

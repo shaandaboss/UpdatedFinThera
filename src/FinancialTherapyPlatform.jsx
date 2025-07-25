@@ -458,11 +458,11 @@ const FinancialTherapyPlatform = () => {
     ];
 
     return (
-      <div className="bg-gray-900/50 backdrop-blur-sm rounded-3xl p-6 border border-gray-700 mb-6">
+      <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-white/20 mb-6">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold text-white">Your Financial Wellness</h2>
-            <p className="text-gray-400">Daily rings to track your financial health</p>
+            <p className="text-white/70">Daily rings to track your financial health</p>
           </div>
           <button
             onClick={() => setShowReflectionPrompt(true)}
@@ -476,7 +476,7 @@ const FinancialTherapyPlatform = () => {
           {rings.map((ring) => (
             <div key={ring.id} className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-4">
-                <div className="absolute inset-0 rounded-full border-8 border-gray-700"></div>
+                <div className="absolute inset-0 rounded-full border-8 border-white/20"></div>
                 <svg className="absolute inset-0 w-32 h-32 transform -rotate-90">
                   <circle
                     cx="64"
@@ -496,22 +496,22 @@ const FinancialTherapyPlatform = () => {
                 </div>
               </div>
               <h3 className="text-lg font-bold text-white mb-1">{ring.title}</h3>
-              <p className="text-sm text-gray-400">{ring.subtitle}</p>
+              <p className="text-sm text-white/70">{ring.subtitle}</p>
             </div>
           ))}
         </div>
 
         {showReflectionPrompt && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-3xl p-8 max-w-md w-full border border-gray-700">
+            <div className="bg-black/90 rounded-3xl p-8 max-w-md w-full border border-white/20">
               <h3 className="text-2xl font-bold text-white mb-4">Daily Financial Reflection 💭</h3>
-              <p className="text-gray-300 mb-6">How did you feel about your money choices today?</p>
+              <p className="text-white/80 mb-6">How did you feel about your money choices today?</p>
               
               <textarea
                 value={dailyReflection}
                 onChange={(e) => setDailyReflection(e.target.value)}
                 placeholder="Share your thoughts..."
-                className="w-full p-4 bg-gray-700 rounded-xl text-white placeholder-gray-400 resize-none h-24 mb-4"
+                className="w-full p-4 bg-black/80 rounded-xl text-white placeholder-gray-400 resize-none h-24 mb-4"
               />
               
               <div className="flex gap-3">
@@ -554,7 +554,7 @@ const FinancialTherapyPlatform = () => {
             <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
               FinThera
             </div>
-            <div className="hidden sm:block text-gray-400 text-sm">
+            <div className="hidden sm:block text-white/70 text-sm">
               Feel Better About Your Financial Lifestyle
             </div>
           </button>
@@ -578,10 +578,10 @@ const FinancialTherapyPlatform = () => {
                 disabled={!available}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   currentPage === id
-                    ? 'bg-gradient-to-r from-teal-500 to-purple-600 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg'
                     : available
-                      ? 'text-gray-300 hover:text-white hover:bg-gray-800'
-                      : 'text-gray-600 cursor-not-allowed'
+                      ? 'text-white/80 hover:text-white hover:bg-black/90'
+                      : 'text-white/50 cursor-not-allowed'
                 }`}
               >
                 {icon} {label}
@@ -592,7 +592,7 @@ const FinancialTherapyPlatform = () => {
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-gray-300 hover:text-white"
+              className="text-white/80 hover:text-white"
             >
               {mobileMenuOpen ? '✕' : '☰'}
             </button>
@@ -600,7 +600,7 @@ const FinancialTherapyPlatform = () => {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-gray-800 border-t border-gray-700 py-4">
+          <div className="md:hidden bg-black/90 border-t border-white/20 py-4">
             <div className="flex flex-col space-y-2">
               {[
                 { id: 'landing', label: 'Home', icon: '🏠', available: true },
@@ -625,10 +625,10 @@ const FinancialTherapyPlatform = () => {
                   disabled={!available}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                     currentPage === id
-                      ? 'bg-gradient-to-r from-teal-500 to-purple-600 text-white'
+                      ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white'
                       : available
-                        ? 'text-gray-300 hover:text-white hover:bg-gray-700'
-                        : 'text-gray-600 cursor-not-allowed'
+                        ? 'text-white/80 hover:text-white hover:bg-black/80'
+                        : 'text-white/50 cursor-not-allowed'
                   }`}
                 >
                   {icon} {label}
@@ -674,24 +674,24 @@ const FinancialTherapyPlatform = () => {
             </span>
           </h1>
 
-          <p className="text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            I'm your AI financial therapist. In a <span className="text-cyan-400 font-semibold">5-minute voice conversation</span>,
+          <p className="text-2xl text-white/80 mb-8 max-w-3xl mx-auto">
+            I'm your AI financial therapist. In a <span className="text-yellow-400 font-semibold">5-minute voice conversation</span>,
             I'll help you understand how your lifestyle choices impact your financial future.
           </p>
 
           <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 max-w-2xl mx-auto mb-12 border border-white/10">
-            <p className="text-lg text-gray-300">
+            <p className="text-lg text-white/80">
               <span className="text-orange-400 font-semibold">Talk naturally.</span><br/>
-              <span className="text-cyan-400 font-semibold">I'll talk back.</span><br/>
+              <span className="text-yellow-400 font-semibold">I'll talk back.</span><br/>
               Understanding your relationship with money through conversation.
             </p>
           </div>
 
           <button
             onClick={() => setCurrentPage('conversation')}
-            className="group relative px-12 py-6 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 rounded-2xl font-bold text-2xl hover:shadow-2xl hover:shadow-purple-500/40 transform hover:scale-105 transition-all duration-300 overflow-hidden"
+            className="group relative px-12 py-6 bg-gradient-to-r from-orange-600 via-yellow-600 to-orange-500 rounded-2xl font-bold text-2xl hover:shadow-2xl hover:shadow-orange-500/40 transform hover:scale-105 transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-yellow-600 to-orange-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
             <span className="relative z-10 flex items-center gap-3">
               <span>Start Voice Conversation</span>
               <span>🎙️</span>
@@ -717,10 +717,10 @@ const FinancialTherapyPlatform = () => {
               desc: "Understand your relationship with money - no judgment"
             }
           ].map((item, i) => (
-            <div key={i} className="group bg-gradient-to-br from-gray-800/50 to-purple-900/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 hover:scale-105 transition-all duration-300">
+            <div key={i} className="group bg-gradient-to-br from-gray-800/50 to-orange-900/30 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
               <div className="text-4xl mb-4">{item.icon}</div>
               <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-              <p className="text-gray-300">{item.desc}</p>
+              <p className="text-white/80">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -737,41 +737,41 @@ const FinancialTherapyPlatform = () => {
             <h1 className="text-3xl font-bold text-white mb-2">
               💬 Financial Therapy Session
             </h1>
-            <p className="text-gray-300 mb-4">
+            <p className="text-white/80 mb-4">
               A safe space to explore your relationship with money
             </p>
 
             <div className="flex justify-center gap-4 flex-wrap">
               {speechRecognition && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30 text-green-300 text-sm">
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 text-sm">
                   🎙️ Voice conversation ready
                 </div>
               )}
               
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm border bg-gray-500/20 border-gray-500/30 text-gray-300">
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm border bg-gray-500/20 border-gray-500/30 text-white/80">
                 🔊 Browser Voice (Default)
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl border border-gray-700 h-[600px] flex flex-col">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-3xl border border-white/20 h-[600px] flex flex-col">
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {chatMessages.map((msg, index) => (
                 <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
                     msg.type === 'user'
                       ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white'
-                      : 'bg-gray-700/70 text-gray-100'
+                      : 'bg-black/80/70 text-gray-100'
                   }`}>
                     {msg.type === 'therapist' && (
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-lg">🤖</span>
-                        <span className="text-xs text-gray-300 font-medium">Your Financial Therapist</span>
+                        <span className="text-xs text-white/80 font-medium">Your Financial Therapist</span>
                         {isAISpeaking && index === chatMessages.length - 1 && (
                           <div className="flex items-center gap-1">
-                            <div className="w-1 h-3 bg-green-400 rounded animate-pulse"></div>
-                            <div className="w-1 h-4 bg-green-400 rounded animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                            <div className="w-1 h-3 bg-green-400 rounded animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                            <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse"></div>
+                            <div className="w-1 h-4 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                            <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.4s'}}></div>
                           </div>
                         )}
                       </div>
@@ -782,15 +782,15 @@ const FinancialTherapyPlatform = () => {
               ))}
             </div>
 
-            <div className="p-6 border-t border-gray-600">
+            <div className="p-6 border-t border-white/30">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={toggleVoice}
                     className={`p-2 rounded-lg transition-all ${
                       voiceEnabled 
-                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
-                        : 'bg-gray-600/50 text-gray-400 hover:bg-gray-600/70'
+                        ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
+                        : 'bg-gray-600/50 text-white/70 hover:bg-gray-600/70'
                     }`}
                     title={voiceEnabled ? 'Voice enabled' : 'Voice disabled'}
                   >
@@ -798,7 +798,7 @@ const FinancialTherapyPlatform = () => {
                   </button>
                   
                   {voiceEnabled && (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-white/70">
                       {isAISpeaking ? '🎙️ AI speaking...' : 'Voice enabled'}
                     </span>
                   )}
@@ -818,7 +818,7 @@ const FinancialTherapyPlatform = () => {
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                       placeholder="Enter your OpenAI API key (sk-...)"
-                      className="flex-1 bg-gray-700 text-white rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-yellow-400 text-sm"
+                      className="flex-1 bg-black/80 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:border-yellow-400 text-sm"
                     />
                     <button
                       onClick={() => {
@@ -845,7 +845,7 @@ const FinancialTherapyPlatform = () => {
                     onClick={isRecording ? stopRecording : startRecording}
                     className={`w-32 h-32 rounded-full transition-all duration-300 flex flex-col items-center justify-center text-white font-bold text-lg shadow-2xl transform hover:scale-105 ${
                       isRecording 
-                        ? 'bg-gradient-to-br from-red-500 to-red-600 animate-pulse shadow-red-500/50 border-4 border-red-300' 
+                        ? 'bg-gradient-to-br from-orange-600 to-yellow-600 animate-pulse shadow-orange-500/50 border-4 border-orange-300' 
                         : 'bg-gradient-to-br from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 shadow-orange-500/30'
                     }`}
                   >
@@ -862,7 +862,7 @@ const FinancialTherapyPlatform = () => {
                     )}
                   </button>
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gray-700 border-2 border-gray-600 flex flex-col items-center justify-center text-gray-400">
+                  <div className="w-32 h-32 rounded-full bg-black/80 border-2 border-white/30 flex flex-col items-center justify-center text-white/70">
                     <div className="text-4xl mb-2">🔑</div>
                     <div className="text-xs text-center">API Key Required</div>
                   </div>
@@ -872,24 +872,24 @@ const FinancialTherapyPlatform = () => {
                   {isRecording ? (
                     <div className="flex flex-col items-center gap-2">
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce"></div>
-                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce"></div>
+                        <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <div className="text-red-400 font-medium">🎤 Listening... speak now</div>
-                      <div className="text-gray-400 text-sm">Click the button again to stop</div>
+                      <div className="text-orange-400 font-medium">🎤 Listening... speak now</div>
+                      <div className="text-white/70 text-sm">Click the button again to stop</div>
                     </div>
                   ) : speechRecognition && apiKey ? (
-                    <div className="text-gray-300">
+                    <div className="text-white/80">
                       <div className="font-medium">Ready to record your response</div>
-                      <div className="text-sm text-gray-400">Click the microphone to start</div>
+                      <div className="text-sm text-white/70">Click the microphone to start</div>
                     </div>
                   ) : !apiKey ? (
                     <div className="text-yellow-400">
                       <div className="font-medium">Enter your API key above to enable voice recording</div>
                     </div>
                   ) : (
-                    <div className="text-gray-400">
+                    <div className="text-white/70">
                       <div className="font-medium">Voice recording not supported in this browser</div>
                       <div className="text-sm">Try Chrome, Edge, or Safari</div>
                     </div>
@@ -913,37 +913,37 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             🎯 Your Financial Therapy Results
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Here's what your lifestyle choices reveal about your financial future
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/40 backdrop-blur-sm rounded-3xl p-8 border border-green-700/30">
+          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/40 backdrop-blur-sm rounded-3xl p-8 border border-yellow-700/30">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-2xl">😊</span>
               <h3 className="text-2xl font-bold text-white">Your Joy Analysis</h3>
             </div>
             
             <div className="space-y-4">
-              <div className="bg-green-800/30 rounded-xl p-4">
-                <div className="text-green-300 font-medium mb-2">💖 What Makes You Happy:</div>
+              <div className="bg-yellow-800/30 rounded-xl p-4">
+                <div className="text-yellow-300 font-medium mb-2">💖 What Makes You Happy:</div>
                 <div className="text-white italic">"{conversationResponses.intro || 'Your meaningful purchases'}"</div>
               </div>
               
-              <div className="bg-red-800/30 rounded-xl p-4">
-                <div className="text-red-300 font-medium mb-2">😰 What You Regret:</div>
+              <div className="bg-orange-800/30 rounded-xl p-4">
+                <div className="text-orange-300 font-medium mb-2">😰 What You Regret:</div>
                 <div className="text-white italic">"{conversationResponses.guilt_spending || 'Impulse purchases'}"</div>
               </div>
               
-              <div className="bg-blue-800/30 rounded-xl p-4">
-                <div className="text-blue-300 font-medium mb-2">🌟 Your Ideal Weekend:</div>
+              <div className="bg-orange-800/30 rounded-xl p-4">
+                <div className="text-orange-300 font-medium mb-2">🌟 Your Ideal Weekend:</div>
                 <div className="text-white italic text-sm">"{conversationResponses.ideal_weekend || 'Quality time and experiences'}"</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-900/50 to-pink-900/40 backdrop-blur-sm rounded-3xl p-8 border border-orange-700/30">
+          <div className="bg-gradient-to-br from-orange-900/50 to-orange-900/40 backdrop-blur-sm rounded-3xl p-8 border border-orange-700/30">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-2xl">💰</span>
               <h3 className="text-2xl font-bold text-white">The Money Story</h3>
@@ -952,17 +952,17 @@ const FinancialTherapyPlatform = () => {
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-4xl font-bold text-orange-400 mb-2">${impact.monthlyWaste}</div>
-                <div className="text-gray-300 text-sm">Monthly redirectable spending</div>
+                <div className="text-white/80 text-sm">Monthly redirectable spending</div>
               </div>
               
               <div className="text-center">
-                <div className="text-3xl font-bold text-pink-400 mb-2">${impact.yearlyWaste.toLocaleString()}</div>
-                <div className="text-gray-300 text-sm">Yearly opportunity</div>
+                <div className="text-3xl font-bold text-orange-400 mb-2">${impact.yearlyWaste.toLocaleString()}</div>
+                <div className="text-white/80 text-sm">Yearly opportunity</div>
               </div>
               
               <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-white mb-1">${impact.tenYearInvested.toLocaleString()}</div>
-                <div className="text-purple-100 text-sm">If invested for 10 years at 7% return</div>
+                <div className="text-white text-sm">If invested for 10 years at 7% return</div>
               </div>
             </div>
           </div>
@@ -974,23 +974,23 @@ const FinancialTherapyPlatform = () => {
               <h2 className="text-3xl font-bold text-white mb-4 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
                 🧠 Your Life Values Report
               </h2>
-              <p className="text-gray-300">Deep insights into your financial personality and patterns</p>
+              <p className="text-white/80">Deep insights into your financial personality and patterns</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {personalizedInsights.map((insight, index) => (
                 <div
                   key={index}
-                  className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-gray-600/30"
+                  className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-white/30/30"
                 >
                   <div className="mb-6">
                     <div className="text-sm text-yellow-400 font-medium mb-2">{insight.category}</div>
                     <h3 className="text-2xl font-bold text-white mb-4">{insight.title}</h3>
-                    <p className="text-gray-300 leading-relaxed mb-4">{insight.description}</p>
+                    <p className="text-white/80 leading-relaxed mb-4">{insight.description}</p>
                     
                     {insight.deepInsight && (
-                      <div className="bg-purple-900/30 rounded-xl p-4 mb-4 border border-orange-700/30">
-                        <div className="text-purple-300 font-medium mb-2 text-sm">🔮 Deep Insight:</div>
+                      <div className="bg-orange-900/30 rounded-xl p-4 mb-4 border border-orange-700/30">
+                        <div className="text-orange-300 font-medium mb-2 text-sm">🔮 Deep Insight:</div>
                         <p className="text-gray-200 text-sm">{insight.deepInsight}</p>
                       </div>
                     )}
@@ -1003,7 +1003,7 @@ const FinancialTherapyPlatform = () => {
                         {insight.actionItems.map((action, actionIndex) => (
                           <div
                             key={actionIndex}
-                            className="flex items-start gap-3 text-sm text-gray-300 bg-gray-700/30 rounded-lg p-3"
+                            className="flex items-start gap-3 text-sm text-white/80 bg-black/80/30 rounded-lg p-3"
                           >
                             <div className="text-yellow-400 mt-0.5">•</div>
                             <div>{action}</div>
@@ -1021,38 +1021,38 @@ const FinancialTherapyPlatform = () => {
         <div className="bg-gradient-to-r from-yellow-900/50 to-orange-900/40 backdrop-blur-sm rounded-3xl p-8 border border-yellow-700/30 mb-12 text-center">
           <div className="text-4xl mb-4">💡</div>
           <h3 className="text-2xl font-bold text-white mb-4">Your Key Realization</h3>
-          <p className="text-lg text-gray-300 leading-relaxed">
+          <p className="text-lg text-white/80 leading-relaxed">
             You're not broke. You're not behind. You just need to <span className="text-yellow-400 font-semibold">redirect money you're already spending</span> from things that don't bring joy to things that build your future. The money is there - it's just going to the wrong places.
           </p>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700 text-center">
+        <div className="bg-black/90/50 backdrop-blur-sm rounded-3xl p-8 border border-white/20 text-center">
           <h3 className="text-2xl font-bold text-white mb-6">🎯 Your Next Steps</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl p-6 border border-green-500/30">
+            <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30">
               <div className="text-3xl mb-3">📊</div>
-              <h4 className="font-bold text-green-400 mb-2">Track for 1 Week</h4>
-              <p className="text-sm text-gray-300">Notice what brings joy vs what you regret</p>
+              <h4 className="font-bold text-yellow-400 mb-2">Track for 1 Week</h4>
+              <p className="text-sm text-white/80">Notice what brings joy vs what you regret</p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl p-6 border border-blue-500/30">
+            <div className="bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-xl p-6 border border-orange-500/30">
               <div className="text-3xl mb-3">✂️</div>
-              <h4 className="font-bold text-blue-400 mb-2">Cut One Thing</h4>
-              <p className="text-sm text-gray-300">Cancel one subscription or habit that doesn't spark joy</p>
+              <h4 className="font-bold text-orange-400 mb-2">Cut One Thing</h4>
+              <p className="text-sm text-white/80">Cancel one subscription or habit that doesn't spark joy</p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl p-6 border border-purple-500/30">
+            <div className="bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-xl p-6 border border-orange-500/30">
               <div className="text-3xl mb-3">🎯</div>
               <h4 className="font-bold text-orange-400 mb-2">Redirect</h4>
-              <p className="text-sm text-gray-300">Put that money toward your goal automatically</p>
+              <p className="text-sm text-white/80">Put that money toward your goal automatically</p>
             </div>
           </div>
 
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => setCurrentPage('profile')}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition-all"
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition-all"
             >
               Set Up Your Profile 👤
             </button>
@@ -1065,7 +1065,7 @@ const FinancialTherapyPlatform = () => {
                 setCurrentConversationStep('intro');
                 setShowConversationResults(false);
               }}
-              className="bg-gradient-to-r from-teal-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition-all"
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition-all"
             >
               Start Fresh Session 🔄
             </button>
@@ -1083,7 +1083,7 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             👤 Your Financial Profile
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Now let's understand your current financial situation
           </p>
         </div>
@@ -1095,7 +1095,7 @@ const FinancialTherapyPlatform = () => {
           <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
             🎨 Your Lifestyle Profile
           </h3>
-          <p className="text-gray-300 mb-6">Tell us about your lifestyle so we can create a truly personalized financial plan that fits YOU.</p>
+          <p className="text-white/80 mb-6">Tell us about your lifestyle so we can create a truly personalized financial plan that fits YOU.</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -1104,7 +1104,7 @@ const FinancialTherapyPlatform = () => {
                 <select 
                   value={lifestyleData.livingArrangement} 
                   onChange={(e) => setLifestyleData({...lifestyleData, livingArrangement: e.target.value})}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
+                  className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
                 >
                   <option value="">Select...</option>
                   <option value="parents">Living with parents</option>
@@ -1120,7 +1120,7 @@ const FinancialTherapyPlatform = () => {
                 <select 
                   value={lifestyleData.transportation} 
                   onChange={(e) => setLifestyleData({...lifestyleData, transportation: e.target.value})}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
+                  className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
                 >
                   <option value="">Select...</option>
                   <option value="public">Public transportation</option>
@@ -1136,7 +1136,7 @@ const FinancialTherapyPlatform = () => {
                 <select 
                   value={lifestyleData.diningHabits} 
                   onChange={(e) => setLifestyleData({...lifestyleData, diningHabits: e.target.value})}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
+                  className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
                 >
                   <option value="">Select...</option>
                   <option value="cook_home">Cook at home mostly</option>
@@ -1153,7 +1153,7 @@ const FinancialTherapyPlatform = () => {
                 <select 
                   value={lifestyleData.travelFrequency} 
                   onChange={(e) => setLifestyleData({...lifestyleData, travelFrequency: e.target.value})}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
+                  className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
                 >
                   <option value="">Select...</option>
                   <option value="rarely">Rarely travel</option>
@@ -1168,7 +1168,7 @@ const FinancialTherapyPlatform = () => {
                 <select 
                   value={lifestyleData.socialSpending} 
                   onChange={(e) => setLifestyleData({...lifestyleData, socialSpending: e.target.value})}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
+                  className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
                 >
                   <option value="">Select...</option>
                   <option value="low">Low - prefer free activities</option>
@@ -1183,7 +1183,7 @@ const FinancialTherapyPlatform = () => {
                 <select 
                   value={lifestyleData.fitnessRoutine} 
                   onChange={(e) => setLifestyleData({...lifestyleData, fitnessRoutine: e.target.value})}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
+                  className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400"
                 >
                   <option value="">Select...</option>
                   <option value="home">Home workouts</option>
@@ -1226,7 +1226,7 @@ const FinancialTherapyPlatform = () => {
                     className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                       financialProfile.familyStatus === status 
                         ? 'bg-orange-500 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-black/80 text-white/80 hover:bg-gray-600'
                     }`}
                   >
                     {status === 'single' ? '👤 Single' : status === 'couple' ? '👫 Couple' : '👨‍👩‍👧‍👦 Family'}
@@ -1316,9 +1316,9 @@ const FinancialTherapyPlatform = () => {
           </div>
           
           {/* Total Household Income Display */}
-          <div className="mt-6 p-4 bg-gray-800/70 rounded-xl border border-gray-600">
+          <div className="mt-6 p-4 bg-black/90/70 rounded-xl border border-white/30">
             <div className="text-center">
-              <div className="text-sm text-gray-400 mb-1">Total Household Income</div>
+              <div className="text-sm text-white/70 mb-1">Total Household Income</div>
               <div className="text-2xl font-bold text-white">
                 ${(financialProfile.currentIncome + financialProfile.partnerIncome).toLocaleString()}
               </div>
@@ -1346,7 +1346,7 @@ const FinancialTherapyPlatform = () => {
                     className={`p-3 rounded-lg text-sm font-medium transition-all text-center ${
                       financialProfile.riskTolerance === option.key 
                         ? 'bg-orange-500 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-black/80 text-white/80 hover:bg-gray-600'
                     }`}
                   >
                     <div>{option.label}</div>
@@ -1370,7 +1370,7 @@ const FinancialTherapyPlatform = () => {
                     className={`p-3 rounded-lg text-sm font-medium transition-all text-center ${
                       financialProfile.timeCommitment === option.key 
                         ? 'bg-orange-500 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-black/80 text-white/80 hover:bg-gray-600'
                     }`}
                   >
                     <div>{option.label}</div>
@@ -1395,7 +1395,7 @@ const FinancialTherapyPlatform = () => {
                     className={`p-3 rounded-lg text-sm font-medium transition-all text-center ${
                       financialProfile.careerStage === option.key 
                         ? 'bg-orange-500 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-black/80 text-white/80 hover:bg-gray-600'
                     }`}
                   >
                     <div>{option.label}</div>
@@ -1419,7 +1419,7 @@ const FinancialTherapyPlatform = () => {
                     className={`p-3 rounded-lg text-sm font-medium transition-all text-center ${
                       financialProfile.willignessToRelocate === option.key 
                         ? 'bg-orange-500 text-white' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-black/80 text-white/80 hover:bg-gray-600'
                     }`}
                   >
                     <div>{option.label}</div>
@@ -1464,7 +1464,7 @@ const FinancialTherapyPlatform = () => {
                     className={`p-3 rounded-lg text-sm font-medium transition-all text-center ${
                       financialProfile.investmentExperience === option.key 
                         ? 'bg-yellow-500 text-black' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-black/80 text-white/80 hover:bg-gray-600'
                     }`}
                   >
                     <div>{option.label}</div>
@@ -1478,7 +1478,7 @@ const FinancialTherapyPlatform = () => {
 
         {/* Legacy Financial Profile Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
               <span className="text-2xl">🏦</span>
               Additional Financial Details
@@ -1486,14 +1486,14 @@ const FinancialTherapyPlatform = () => {
             
             <div className="space-y-6">
               <div>
-                <label className="block font-medium mb-2 text-gray-300">🎂 Age</label>
+                <label className="block font-medium mb-2 text-white/80">🎂 Age</label>
                 <input
                   type="range"
                   min="18"
                   max="70"
                   value={financialProfile.age}
                   onChange={(e) => setFinancialProfile(prev => ({ ...prev, age: parseInt(e.target.value) }))}
-                  className="w-full accent-teal-500"
+                  className="w-full accent-orange-500"
                 />
                 <div className="text-center text-yellow-400 font-semibold text-lg mt-2">
                   {financialProfile.age} years old
@@ -1501,7 +1501,7 @@ const FinancialTherapyPlatform = () => {
               </div>
 
               <div>
-                <label className="block font-medium mb-2 text-gray-300">💰 Your Annual Income</label>
+                <label className="block font-medium mb-2 text-white/80">💰 Your Annual Income</label>
                 <input
                   type="range"
                   min="25000"
@@ -1509,15 +1509,15 @@ const FinancialTherapyPlatform = () => {
                   step="5000"
                   value={financialProfile.currentIncome}
                   onChange={(e) => setFinancialProfile(prev => ({ ...prev, currentIncome: parseInt(e.target.value) }))}
-                  className="w-full accent-teal-500"
+                  className="w-full accent-orange-500"
                 />
-                <div className="text-center text-green-400 font-semibold text-lg mt-2">
+                <div className="text-center text-yellow-400 font-semibold text-lg mt-2">
                   ${financialProfile.currentIncome.toLocaleString()}
                 </div>
               </div>
 
               <div>
-                <label className="block font-medium mb-2 text-gray-300">💸 Monthly Expenses</label>
+                <label className="block font-medium mb-2 text-white/80">💸 Monthly Expenses</label>
                 <input
                   type="range"
                   min="1000"
@@ -1525,7 +1525,7 @@ const FinancialTherapyPlatform = () => {
                   step="100"
                   value={financialProfile.monthlyExpenses}
                   onChange={(e) => setFinancialProfile(prev => ({ ...prev, monthlyExpenses: parseInt(e.target.value) }))}
-                  className="w-full accent-teal-500"
+                  className="w-full accent-orange-500"
                 />
                 <div className="text-center text-orange-400 font-semibold text-lg mt-2">
                   ${financialProfile.monthlyExpenses.toLocaleString()}/month
@@ -1534,7 +1534,7 @@ const FinancialTherapyPlatform = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
               <span className="text-2xl">💎</span>
               Assets & Savings
@@ -1542,7 +1542,7 @@ const FinancialTherapyPlatform = () => {
             
             <div className="space-y-6">
               <div>
-                <label className="block font-medium mb-2 text-gray-300">🏦 Emergency Fund</label>
+                <label className="block font-medium mb-2 text-white/80">🏦 Emergency Fund</label>
                 <input
                   type="range"
                   min="0"
@@ -1550,7 +1550,7 @@ const FinancialTherapyPlatform = () => {
                   step="500"
                   value={financialProfile.emergencyFund}
                   onChange={(e) => setFinancialProfile(prev => ({ ...prev, emergencyFund: parseInt(e.target.value) }))}
-                  className="w-full accent-teal-500"
+                  className="w-full accent-orange-500"
                 />
                 <div className="text-center text-yellow-400 font-semibold text-lg mt-2">
                   ${financialProfile.emergencyFund.toLocaleString()}
@@ -1558,7 +1558,7 @@ const FinancialTherapyPlatform = () => {
               </div>
 
               <div>
-                <label className="block font-medium mb-2 text-gray-300">📈 Total Investments</label>
+                <label className="block font-medium mb-2 text-white/80">📈 Total Investments</label>
                 <input
                   type="range"
                   min="0"
@@ -1566,15 +1566,15 @@ const FinancialTherapyPlatform = () => {
                   step="1000"
                   value={financialProfile.investments}
                   onChange={(e) => setFinancialProfile(prev => ({ ...prev, investments: parseInt(e.target.value) }))}
-                  className="w-full accent-teal-500"
+                  className="w-full accent-orange-500"
                 />
-                <div className="text-center text-green-400 font-semibold text-lg mt-2">
+                <div className="text-center text-yellow-400 font-semibold text-lg mt-2">
                   ${financialProfile.investments.toLocaleString()}
                 </div>
               </div>
 
               <div>
-                <label className="block font-medium mb-2 text-gray-300">🎯 Financial Goals</label>
+                <label className="block font-medium mb-2 text-white/80">🎯 Financial Goals</label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { key: 'buyHome', label: '🏠 Buy Home', active: financialProfile.financialGoals.buyHome },
@@ -1593,8 +1593,8 @@ const FinancialTherapyPlatform = () => {
                       }))}
                       className={`p-3 rounded-xl text-center transition-all text-sm ${
                         goal.active
-                          ? 'bg-gradient-to-br from-green-500 to-teal-600 text-white shadow-lg'
-                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                          ? 'bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg'
+                          : 'bg-black/80/50 text-white/80 hover:bg-gray-600/50'
                       }`}
                     >
                       {goal.label}
@@ -1607,39 +1607,39 @@ const FinancialTherapyPlatform = () => {
         </div>
 
         {/* Financial Profile Summary */}
-        <div className="bg-gray-900/70 rounded-2xl p-8 border border-gray-700/30 mt-8 mb-8">
+        <div className="bg-black/70 rounded-2xl p-8 border border-white/20/30 mt-8 mb-8">
           <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-2">
             📊 Your Financial Profile Summary
           </h3>
           
           {/* Demographics Card */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/40 rounded-xl p-6 border border-blue-700/30">
-              <div className="text-blue-300 text-sm font-medium mb-2">📍 Demographics</div>
+            <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/40 rounded-xl p-6 border border-orange-700/30">
+              <div className="text-orange-300 text-sm font-medium mb-2">📍 Demographics</div>
               <div className="space-y-2">
                 <div className="text-white font-semibold">{financialProfile.age} years old</div>
-                <div className="text-gray-300 text-sm">{financialProfile.familyStatus === 'single' ? '👤 Single' : financialProfile.familyStatus === 'couple' ? '👫 Couple' : '👨‍👩‍👧‍👦 Family'}</div>
-                <div className="text-gray-300 text-sm">{financialProfile.dependents} dependents</div>
+                <div className="text-white/80 text-sm">{financialProfile.familyStatus === 'single' ? '👤 Single' : financialProfile.familyStatus === 'couple' ? '👫 Couple' : '👨‍👩‍👧‍👦 Family'}</div>
+                <div className="text-white/80 text-sm">{financialProfile.dependents} dependents</div>
               </div>
             </div>
             
             {/* Financial State Card */}
-            <div className="bg-gradient-to-br from-green-900/50 to-green-800/40 rounded-xl p-6 border border-green-700/30">
-              <div className="text-green-300 text-sm font-medium mb-2">💰 Financial State</div>
+            <div className="bg-gradient-to-br from-green-900/50 to-green-800/40 rounded-xl p-6 border border-yellow-700/30">
+              <div className="text-yellow-300 text-sm font-medium mb-2">💰 Financial State</div>
               <div className="space-y-2">
                 <div className="text-white font-semibold">${(financialProfile.currentIncome + financialProfile.partnerIncome).toLocaleString()}</div>
-                <div className="text-gray-300 text-sm">Household Income</div>
-                <div className="text-gray-300 text-sm">${financialProfile.currentSavings.toLocaleString()} saved</div>
+                <div className="text-white/80 text-sm">Household Income</div>
+                <div className="text-white/80 text-sm">${financialProfile.currentSavings.toLocaleString()} saved</div>
               </div>
             </div>
             
             {/* Preferences Card */}
-            <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/40 rounded-xl p-6 border border-purple-700/30">
-              <div className="text-purple-300 text-sm font-medium mb-2">❤️ Preferences</div>
+            <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/40 rounded-xl p-6 border border-orange-700/30">
+              <div className="text-orange-300 text-sm font-medium mb-2">❤️ Preferences</div>
               <div className="space-y-2">
                 <div className="text-white font-semibold">{financialProfile.riskTolerance} risk</div>
-                <div className="text-gray-300 text-sm">{financialProfile.timeCommitment} time commitment</div>
-                <div className="text-gray-300 text-sm">{financialProfile.careerStage} career</div>
+                <div className="text-white/80 text-sm">{financialProfile.timeCommitment} time commitment</div>
+                <div className="text-white/80 text-sm">{financialProfile.careerStage} career</div>
               </div>
             </div>
           </div>
@@ -1654,8 +1654,8 @@ const FinancialTherapyPlatform = () => {
               {/* Income Health */}
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto mb-4 relative">
-                  <div className="w-full h-full rounded-full border-4 border-gray-600 flex items-center justify-center">
-                    <div className="text-2xl font-bold text-green-400">
+                  <div className="w-full h-full rounded-full border-4 border-white/30 flex items-center justify-center">
+                    <div className="text-2xl font-bold text-yellow-400">
                       {financialProfile.currentIncome + financialProfile.partnerIncome >= 75000 ? 'A' : 
                        financialProfile.currentIncome + financialProfile.partnerIncome >= 50000 ? 'B' : 
                        financialProfile.currentIncome + financialProfile.partnerIncome >= 35000 ? 'C' : 'D'}
@@ -1663,13 +1663,13 @@ const FinancialTherapyPlatform = () => {
                   </div>
                 </div>
                 <div className="text-white font-semibold">Income Health</div>
-                <div className="text-gray-300 text-sm">Based on household income</div>
+                <div className="text-white/80 text-sm">Based on household income</div>
               </div>
               
               {/* Savings Rate */}
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto mb-4 relative">
-                  <div className="w-full h-full rounded-full border-4 border-gray-600 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full border-4 border-white/30 flex items-center justify-center">
                     <div className="text-2xl font-bold text-yellow-400">
                       {Math.round((financialProfile.currentSavings / ((financialProfile.currentIncome + financialProfile.partnerIncome) * 0.1)) * 100) > 100 ? 'A+' :
                        Math.round((financialProfile.currentSavings / ((financialProfile.currentIncome + financialProfile.partnerIncome) * 0.1)) * 100) > 50 ? 'A' :
@@ -1678,13 +1678,13 @@ const FinancialTherapyPlatform = () => {
                   </div>
                 </div>
                 <div className="text-white font-semibold">Savings Rate</div>
-                <div className="text-gray-300 text-sm">Emergency fund ratio</div>
+                <div className="text-white/80 text-sm">Emergency fund ratio</div>
               </div>
               
               {/* Debt Management */}
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto mb-4 relative">
-                  <div className="w-full h-full rounded-full border-4 border-gray-600 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full border-4 border-white/30 flex items-center justify-center">
                     <div className="text-2xl font-bold text-orange-400">
                       {(financialProfile.monthlyDebtPayment * 12) / (financialProfile.currentIncome + financialProfile.partnerIncome) < 0.1 ? 'A' :
                        (financialProfile.monthlyDebtPayment * 12) / (financialProfile.currentIncome + financialProfile.partnerIncome) < 0.2 ? 'B' :
@@ -1693,14 +1693,14 @@ const FinancialTherapyPlatform = () => {
                   </div>
                 </div>
                 <div className="text-white font-semibold">Debt Health</div>
-                <div className="text-gray-300 text-sm">Debt-to-income ratio</div>
+                <div className="text-white/80 text-sm">Debt-to-income ratio</div>
               </div>
               
               {/* Investment Readiness */}
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto mb-4 relative">
-                  <div className="w-full h-full rounded-full border-4 border-gray-600 flex items-center justify-center">
-                    <div className="text-2xl font-bold text-purple-400">
+                  <div className="w-full h-full rounded-full border-4 border-white/30 flex items-center justify-center">
+                    <div className="text-2xl font-bold text-orange-400">
                       {financialProfile.investmentExperience === 'advanced' ? 'A' :
                        financialProfile.investmentExperience === 'intermediate' ? 'B' :
                        financialProfile.investmentExperience === 'beginner' ? 'C' : 'D'}
@@ -1708,13 +1708,13 @@ const FinancialTherapyPlatform = () => {
                   </div>
                 </div>
                 <div className="text-white font-semibold">Investment Ready</div>
-                <div className="text-gray-300 text-sm">Experience level</div>
+                <div className="text-white/80 text-sm">Experience level</div>
               </div>
             </div>
           </div>
           
           {/* Income Journey Planning */}
-          <div className="bg-gradient-to-r from-blue-900/50 to-indigo-900/40 rounded-xl p-8 border border-blue-700/30">
+          <div className="bg-gradient-to-r from-orange-900/50 to-yellow-900/40 rounded-xl p-8 border border-orange-700/30">
             <h4 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
               📈 Your Income Journey
             </h4>
@@ -1727,12 +1727,12 @@ const FinancialTherapyPlatform = () => {
                 { period: '2050s', age: `${Math.floor(financialProfile.age/10)*10 + 30}s`, income: Math.round((financialProfile.currentIncome + financialProfile.partnerIncome) * 2.2) }
               ].map((decade, index) => (
                 <div key={decade.period} className="text-center">
-                  <div className="bg-blue-800/30 rounded-lg p-4 mb-2">
-                    <div className="text-blue-300 text-sm font-medium">{decade.period}</div>
+                  <div className="bg-orange-800/30 rounded-lg p-4 mb-2">
+                    <div className="text-orange-300 text-sm font-medium">{decade.period}</div>
                     <div className="text-white text-lg font-bold">${decade.income.toLocaleString()}</div>
-                    <div className="text-gray-300 text-xs">Your {decade.age}</div>
+                    <div className="text-white/80 text-xs">Your {decade.age}</div>
                   </div>
-                  <div className="text-gray-400 text-xs">
+                  <div className="text-white/70 text-xs">
                     {index === 0 ? 'Current income' : 
                      index === 1 ? '+40% growth' : 
                      index === 2 ? 'Peak earning' : 'Pre-retirement'}
@@ -1741,13 +1741,13 @@ const FinancialTherapyPlatform = () => {
               ))}
             </div>
             
-            <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-600">
+            <div className="mt-6 p-4 bg-black/90/50 rounded-lg border border-white/30">
               <div className="text-center">
-                <div className="text-gray-300 text-sm mb-1">Lifetime Earning Potential</div>
-                <div className="text-3xl font-bold text-blue-400">
+                <div className="text-white/80 text-sm mb-1">Lifetime Earning Potential</div>
+                <div className="text-3xl font-bold text-orange-400">
                   ${Math.round(((financialProfile.currentIncome + financialProfile.partnerIncome) * 35 * 1.6) / 1000000 * 10) / 10}M
                 </div>
-                <div className="text-gray-400 text-xs">Over next 35 years with 3% annual growth</div>
+                <div className="text-white/70 text-xs">Over next 35 years with 3% annual growth</div>
               </div>
             </div>
           </div>
@@ -1780,41 +1780,41 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             🎯 Dream Life Planner
           </h1>
-          <p className="text-xl text-gray-300">Map out your ideal lifestyle and create a financial roadmap to get there</p>
+          <p className="text-xl text-white/80">Map out your ideal lifestyle and create a financial roadmap to get there</p>
         </div>
         
         {renderWellnessRings()}
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700 text-center">
+        <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">🚀 Your Financial Future</h2>
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-white/80 mb-8">
             Based on your profile and goals, here's your personalized path to financial wellness
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-green-900/30 rounded-xl p-6 border border-green-700/30">
-              <div className="text-green-400 font-bold text-3xl mb-2">65</div>
-              <div className="text-green-300">Projected Retirement Age</div>
+            <div className="bg-yellow-900/30 rounded-xl p-6 border border-yellow-700/30">
+              <div className="text-yellow-400 font-bold text-3xl mb-2">65</div>
+              <div className="text-yellow-300">Projected Retirement Age</div>
             </div>
 
-            <div className="bg-purple-900/30 rounded-xl p-6 border border-orange-700/30">
+            <div className="bg-orange-900/30 rounded-xl p-6 border border-orange-700/30">
               <div className="text-orange-400 font-bold text-3xl mb-2">$1.2M</div>
-              <div className="text-purple-300">Estimated Net Worth at Retirement</div>
+              <div className="text-orange-300">Estimated Net Worth at Retirement</div>
             </div>
 
             <div className="bg-teal-900/30 rounded-xl p-6 border border-yellow-700/30">
               <div className="text-yellow-400 font-bold text-3xl mb-2">✓</div>
-              <div className="text-teal-300">On Track for Financial Freedom</div>
+              <div className="text-yellow-300">On Track for Financial Freedom</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-xl p-8 border border-cyan-700/30">
+          <div className="bg-gradient-to-r from-orange-900/30 to-yellow-900/30 rounded-xl p-8 border border-orange-700/30">
             <h3 className="text-2xl font-bold text-white mb-4">🎯 Your Recommended Action Plan</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
               <div>
-                <h4 className="text-lg font-bold text-cyan-400 mb-3">Immediate Steps (This Month)</h4>
-                <ul className="space-y-2 text-gray-300">
+                <h4 className="text-lg font-bold text-yellow-400 mb-3">Immediate Steps (This Month)</h4>
+                <ul className="space-y-2 text-white/80">
                   <li>• Set up automatic 401k contribution (15% of income)</li>
                   <li>• Open high-yield savings account for emergency fund</li>
                   <li>• Review and optimize monthly subscriptions</li>
@@ -1824,7 +1824,7 @@ const FinancialTherapyPlatform = () => {
 
               <div>
                 <h4 className="text-lg font-bold text-orange-400 mb-3">Long-term Strategy (Next Year)</h4>
-                <ul className="space-y-2 text-gray-300">
+                <ul className="space-y-2 text-white/80">
                   <li>• Build emergency fund to $27,000 (6 months expenses)</li>
                   <li>• Increase investments to $25,000</li>
                   <li>• Research home buying in your target area</li>
@@ -1846,7 +1846,7 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             💚 Your Financial Health Score
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Get real-time insights into your financial wellness
           </p>
         </div>
@@ -1859,8 +1859,8 @@ const FinancialTherapyPlatform = () => {
             </div>
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-green-400 mb-2">Building Momentum</h2>
-            <p className="text-gray-300">You're on the right track</p>
+            <h2 className="text-2xl font-bold text-yellow-400 mb-2">Building Momentum</h2>
+            <p className="text-white/80">You're on the right track</p>
           </div>
         </div>
 
@@ -1868,98 +1868,98 @@ const FinancialTherapyPlatform = () => {
 
         {/* Detailed Financial Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center justify-between mb-2">
               <span className="text-orange-400 text-lg">🛡️</span>
-              <span className="text-xs text-gray-400">needs work</span>
+              <span className="text-xs text-white/70">needs work</span>
             </div>
             <h4 className="text-white font-semibold mb-1">Emergency Fund</h4>
-            <p className="text-sm text-gray-400 mb-2">Aim for 6 months of expenses saved</p>
-            <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+            <p className="text-sm text-white/70 mb-2">Aim for 6 months of expenses saved</p>
+            <div className="w-full bg-black/80 rounded-full h-2 mb-2">
               <div className="bg-gradient-to-r from-orange-400 to-red-400 h-2 rounded-full" style={{width: '25%'}}></div>
             </div>
-            <p className="text-xs text-gray-300">3/25 points</p>
+            <p className="text-xs text-white/80">3/25 points</p>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center justify-between mb-2">
               <span className="text-yellow-400 text-lg">📊</span>
               <span className="text-xs text-yellow-400">good</span>
             </div>
             <h4 className="text-white font-semibold mb-1">Savings & Investments</h4>
-            <p className="text-sm text-gray-400 mb-2">Save at least 20% of your income</p>
-            <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+            <p className="text-sm text-white/70 mb-2">Save at least 20% of your income</p>
+            <div className="w-full bg-black/80 rounded-full h-2 mb-2">
               <div className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full" style={{width: '70%'}}></div>
             </div>
-            <p className="text-xs text-gray-300">18/25 points</p>
+            <p className="text-xs text-white/80">18/25 points</p>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-red-400 text-lg">💳</span>
-              <span className="text-xs text-red-400">needs work</span>
+              <span className="text-orange-400 text-lg">💳</span>
+              <span className="text-xs text-orange-400">needs work</span>
             </div>
             <h4 className="text-white font-semibold mb-1">Debt Management</h4>
-            <p className="text-sm text-gray-400 mb-2">Keep debt under 30% of income</p>
-            <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-              <div className="bg-gradient-to-r from-red-400 to-pink-400 h-2 rounded-full" style={{width: '40%'}}></div>
+            <p className="text-sm text-white/70 mb-2">Keep debt under 30% of income</p>
+            <div className="w-full bg-black/80 rounded-full h-2 mb-2">
+              <div className="bg-gradient-to-r from-orange-400 to-yellow-400 h-2 rounded-full" style={{width: '40%'}}></div>
             </div>
-            <p className="text-xs text-gray-300">8/25 points</p>
+            <p className="text-xs text-white/80">8/25 points</p>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-green-400 text-lg">💰</span>
-              <span className="text-xs text-green-400">excellent</span>
+              <span className="text-yellow-400 text-lg">💰</span>
+              <span className="text-xs text-yellow-400">excellent</span>
             </div>
             <h4 className="text-white font-semibold mb-1">Budget Balance</h4>
-            <p className="text-sm text-gray-400 mb-2">Live below your means</p>
-            <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+            <p className="text-sm text-white/70 mb-2">Live below your means</p>
+            <div className="w-full bg-black/80 rounded-full h-2 mb-2">
               <div className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full" style={{width: '90%'}}></div>
             </div>
-            <p className="text-xs text-gray-300">23/25 points</p>
+            <p className="text-xs text-white/80">23/25 points</p>
           </div>
         </div>
 
         {/* Achievements */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
               🏆 Your Achievements
             </h3>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-green-900/30 rounded-lg border border-green-700/30">
+              <div className="flex items-center gap-3 p-3 bg-yellow-900/30 rounded-lg border border-yellow-700/30">
                 <span className="text-2xl">✅</span>
                 <div>
-                  <div className="font-medium text-green-400">Conversation Complete</div>
-                  <div className="text-sm text-gray-400">Opened up about money habits</div>
+                  <div className="font-medium text-yellow-400">Conversation Complete</div>
+                  <div className="text-sm text-white/70">Opened up about money habits</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-blue-900/30 rounded-lg border border-blue-700/30">
+              <div className="flex items-center gap-3 p-3 bg-orange-900/30 rounded-lg border border-orange-700/30">
                 <span className="text-2xl">📊</span>
                 <div>
-                  <div className="font-medium text-blue-400">Profile Builder</div>
-                  <div className="text-sm text-gray-400">Set up financial profile</div>
+                  <div className="font-medium text-orange-400">Profile Builder</div>
+                  <div className="text-sm text-white/70">Set up financial profile</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-purple-900/30 rounded-lg border border-orange-700/30">
+              <div className="flex items-center gap-3 p-3 bg-orange-900/30 rounded-lg border border-orange-700/30">
                 <span className="text-2xl">⚡</span>
                 <div>
                   <div className="font-medium text-orange-400">Momentum Master</div>
-                  <div className="text-sm text-gray-400">Completed 3 days of tracking</div>
+                  <div className="text-sm text-white/70">Completed 3 days of tracking</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-yellow-900/30 rounded-lg border border-yellow-700/30">
                 <span className="text-2xl">👑</span>
                 <div>
                   <div className="font-medium text-yellow-400">Building Strength</div>
-                  <div className="text-sm text-gray-400">Improved health score by 15 points</div>
+                  <div className="text-sm text-white/70">Improved health score by 15 points</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
               🎯 Next Steps
             </h3>
@@ -1968,14 +1968,14 @@ const FinancialTherapyPlatform = () => {
                 <span className="text-2xl">💡</span>
                 <div>
                   <div className="font-medium text-yellow-400">Boost Your Safety Ring</div>
-                  <div className="text-sm text-gray-400">Build emergency fund</div>
+                  <div className="text-sm text-white/70">Build emergency fund</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-purple-900/30 rounded-lg border border-orange-700/30">
+              <div className="flex items-center gap-3 p-3 bg-orange-900/30 rounded-lg border border-orange-700/30">
                 <span className="text-2xl">🚀</span>
                 <div>
                   <div className="font-medium text-orange-400">Increase Freedom Ring</div>
-                  <div className="text-sm text-gray-400">Start investing for goals</div>
+                  <div className="text-sm text-white/70">Start investing for goals</div>
                 </div>
               </div>
             </div>
@@ -1988,11 +1988,11 @@ const FinancialTherapyPlatform = () => {
             💚 Boost Your Score
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-3 px-6 rounded-lg font-medium hover:from-teal-600 hover:to-blue-600 transition-all flex items-center gap-2">
+            <button className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 transition-all flex items-center gap-2">
               <span className="text-lg">📊</span>
               Update Profile
             </button>
-            <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all flex items-center gap-2">
+            <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 transition-all flex items-center gap-2">
               <span className="text-lg">⚡</span>
               Adjust Plan
             </button>
@@ -2010,61 +2010,61 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             🛠️ Financial Tools
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Powerful calculators to optimize your money
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Time vs Money Calculator */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl">⏰</span>
               <div>
                 <h3 className="text-xl font-bold text-white">Time vs Money Calculator</h3>
-                <p className="text-sm text-gray-400">See how much waiting to invest costs you</p>
+                <p className="text-sm text-white/70">See how much waiting to invest costs you</p>
               </div>
             </div>
-            <button className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-3 px-6 rounded-lg font-medium hover:from-teal-600 hover:to-blue-600 transition-all">
+            <button className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 transition-all">
               Calculate Impact
             </button>
           </div>
 
           {/* Budget Tracker */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl">📊</span>
               <div>
                 <h3 className="text-xl font-bold text-white">Budget Tracker</h3>
-                <p className="text-sm text-gray-400">Track spending and optimize your budget</p>
+                <p className="text-sm text-white/70">Track spending and optimize your budget</p>
               </div>
             </div>
-            <button className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 px-6 rounded-lg font-medium hover:from-green-600 hover:to-teal-600 transition-all">
+            <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-6 rounded-lg font-medium hover:from-yellow-600 hover:to-orange-600 transition-all">
               Start Tracking
             </button>
           </div>
 
           {/* Investment Simulator */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl">📈</span>
               <div>
                 <h3 className="text-xl font-bold text-white">Investment Simulator</h3>
-                <p className="text-sm text-gray-400">Model different investment strategies</p>
+                <p className="text-sm text-white/70">Model different investment strategies</p>
               </div>
             </div>
-            <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all">
+            <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 transition-all">
               Run Simulation
             </button>
           </div>
 
           {/* Peer Comparison */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl">👥</span>
               <div>
                 <h3 className="text-xl font-bold text-white">Peer Comparison</h3>
-                <p className="text-sm text-gray-400">See how you compare to others your age</p>
+                <p className="text-sm text-white/70">See how you compare to others your age</p>
               </div>
             </div>
             <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-6 rounded-lg font-medium hover:from-orange-600 hover:to-red-600 transition-all">
@@ -2084,75 +2084,75 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             📚 Learn & Grow
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Master your money with bite-sized lessons
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Investment Basics */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="text-3xl mb-4">📈</div>
             <h3 className="text-xl font-bold text-white mb-2">Investment Basics</h3>
-            <p className="text-gray-400 mb-4">Learn the fundamentals of growing your wealth</p>
+            <p className="text-white/70 mb-4">Learn the fundamentals of growing your wealth</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-400">5 min read</span>
-              <button className="text-yellow-400 hover:text-teal-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">5 min read</span>
+              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
             </div>
           </div>
 
           {/* Budgeting 101 */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="text-3xl mb-4">💰</div>
             <h3 className="text-xl font-bold text-white mb-2">Budgeting 101</h3>
-            <p className="text-gray-400 mb-4">Create a budget that actually works for you</p>
+            <p className="text-white/70 mb-4">Create a budget that actually works for you</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-400">7 min read</span>
-              <button className="text-yellow-400 hover:text-teal-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">7 min read</span>
+              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
             </div>
           </div>
 
           {/* Emergency Fund */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="text-3xl mb-4">🛟</div>
             <h3 className="text-xl font-bold text-white mb-2">Emergency Fund</h3>
-            <p className="text-gray-400 mb-4">Build your financial safety net</p>
+            <p className="text-white/70 mb-4">Build your financial safety net</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-400">4 min read</span>
-              <button className="text-yellow-400 hover:text-teal-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">4 min read</span>
+              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
             </div>
           </div>
 
           {/* Debt Management */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="text-3xl mb-4">💳</div>
             <h3 className="text-xl font-bold text-white mb-2">Debt Management</h3>
-            <p className="text-gray-400 mb-4">Smart strategies to pay off debt faster</p>
+            <p className="text-white/70 mb-4">Smart strategies to pay off debt faster</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-400">6 min read</span>
-              <button className="text-yellow-400 hover:text-teal-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">6 min read</span>
+              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
             </div>
           </div>
 
           {/* Retirement Planning */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="text-3xl mb-4">🏖️</div>
             <h3 className="text-xl font-bold text-white mb-2">Retirement Planning</h3>
-            <p className="text-gray-400 mb-4">Secure your future with smart planning</p>
+            <p className="text-white/70 mb-4">Secure your future with smart planning</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-400">8 min read</span>
-              <button className="text-yellow-400 hover:text-teal-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">8 min read</span>
+              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
             </div>
           </div>
 
           {/* Financial Psychology */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
             <div className="text-3xl mb-4">🧠</div>
             <h3 className="text-xl font-bold text-white mb-2">Money Psychology</h3>
-            <p className="text-gray-400 mb-4">Understand your relationship with money</p>
+            <p className="text-white/70 mb-4">Understand your relationship with money</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-400">10 min read</span>
-              <button className="text-yellow-400 hover:text-teal-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">10 min read</span>
+              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
             </div>
           </div>
         </div>
@@ -2168,34 +2168,34 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             ⚡ Financial Optimization
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             AI-powered recommendations to maximize your financial potential
           </p>
         </div>
 
         {/* Quick Wins Section */}
-        <div className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-8 border border-green-700/30 mb-8">
+        <div className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-8 border border-yellow-700/30 mb-8">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             🚀 Quick Wins (30-Day Impact)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <div className="text-3xl mb-3">💳</div>
               <h3 className="text-lg font-bold text-white mb-2">Optimize Credit Cards</h3>
-              <p className="text-gray-300 text-sm mb-4">Switch to cashback cards for categories you spend most on</p>
-              <div className="text-green-400 font-semibold">Potential: +$150/month</div>
+              <p className="text-white/80 text-sm mb-4">Switch to cashback cards for categories you spend most on</p>
+              <div className="text-yellow-400 font-semibold">Potential: +$150/month</div>
             </div>
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <div className="text-3xl mb-3">📱</div>
               <h3 className="text-lg font-bold text-white mb-2">Review Subscriptions</h3>
-              <p className="text-gray-300 text-sm mb-4">Cancel unused subscriptions and negotiate better rates</p>
-              <div className="text-green-400 font-semibold">Potential: +$89/month</div>
+              <p className="text-white/80 text-sm mb-4">Cancel unused subscriptions and negotiate better rates</p>
+              <div className="text-yellow-400 font-semibold">Potential: +$89/month</div>
             </div>
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <div className="text-3xl mb-3">🏦</div>
               <h3 className="text-lg font-bold text-white mb-2">High-Yield Savings</h3>
-              <p className="text-gray-300 text-sm mb-4">Move emergency fund to 4.5% APY account</p>
-              <div className="text-green-400 font-semibold">Potential: +$75/month</div>
+              <p className="text-white/80 text-sm mb-4">Move emergency fund to 4.5% APY account</p>
+              <div className="text-yellow-400 font-semibold">Potential: +$75/month</div>
             </div>
           </div>
         </div>
@@ -2206,37 +2206,37 @@ const FinancialTherapyPlatform = () => {
             📈 Investment Optimization
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <h3 className="text-lg font-bold text-white mb-4">Portfolio Rebalancing</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Current Allocation</span>
+                  <span className="text-white/80">Current Allocation</span>
                   <span className="text-yellow-400">60/40 Stocks/Bonds</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Recommended</span>
-                  <span className="text-green-400">80/20 for your age</span>
+                  <span className="text-white/80">Recommended</span>
+                  <span className="text-yellow-400">80/20 for your age</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Expected Gain</span>
-                  <span className="text-green-400">+1.2% annually</span>
+                  <span className="text-white/80">Expected Gain</span>
+                  <span className="text-yellow-400">+1.2% annually</span>
                 </div>
               </div>
             </div>
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <h3 className="text-lg font-bold text-white mb-4">Tax Optimization</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">401k Contribution</span>
+                  <span className="text-white/80">401k Contribution</span>
                   <span className="text-yellow-400">$12,000/year</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Max Recommended</span>
-                  <span className="text-green-400">$23,000/year</span>
+                  <span className="text-white/80">Max Recommended</span>
+                  <span className="text-yellow-400">$23,000/year</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Tax Savings</span>
-                  <span className="text-green-400">$2,640/year</span>
+                  <span className="text-white/80">Tax Savings</span>
+                  <span className="text-yellow-400">$2,640/year</span>
                 </div>
               </div>
             </div>
@@ -2249,22 +2249,22 @@ const FinancialTherapyPlatform = () => {
             🤖 AI-Powered Insights
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <h3 className="text-lg font-bold text-white mb-3">Career Growth Optimization</h3>
               <div className="space-y-2">
-                <p className="text-gray-300 text-sm">Based on your profile and lifestyle data:</p>
-                <ul className="text-sm text-gray-400 space-y-1">
+                <p className="text-white/80 text-sm">Based on your profile and lifestyle data:</p>
+                <ul className="text-sm text-white/70 space-y-1">
                   <li>• Negotiate salary increase: aim for 8-12% annually</li>
                   <li>• Side income opportunity: +$500-1500/month</li>
                   <li>• Skill investment: courses that boost earning potential</li>
                 </ul>
               </div>
             </div>
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="bg-black/90/50 rounded-xl p-6 border border-white/20">
               <h3 className="text-lg font-bold text-white mb-3">Behavioral Patterns</h3>
               <div className="space-y-2">
-                <p className="text-gray-300 text-sm">AI detected spending patterns:</p>
-                <ul className="text-sm text-gray-400 space-y-1">
+                <p className="text-white/80 text-sm">AI detected spending patterns:</p>
+                <ul className="text-sm text-white/70 space-y-1">
                   <li>• Dining out increases 40% on weekends</li>
                   <li>• Impulse purchases peak at 3pm</li>
                   <li>• Best saving streak: 3 weeks in March</li>
@@ -2285,80 +2285,80 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             🤔 What If Scenarios
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Explore life possibilities and understand their financial impact
           </p>
         </div>
 
         {/* Popular Scenarios */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 border border-blue-700/30 hover:border-blue-500/50 transition-all cursor-pointer">
+          <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
             <div className="text-4xl mb-4">🏠</div>
             <h3 className="text-xl font-bold text-white mb-2">Can I Move Out?</h3>
-            <p className="text-gray-300 text-sm mb-4">Calculate if you can afford your own place based on rent, utilities, and lifestyle</p>
+            <p className="text-white/80 text-sm mb-4">Calculate if you can afford your own place based on rent, utilities, and lifestyle</p>
             <div className="flex items-center justify-between">
-              <span className="text-green-400 text-sm">✓ Most Popular</span>
-              <button className="text-blue-400 hover:text-blue-300">Try It →</button>
+              <span className="text-yellow-400 text-sm">✓ Most Popular</span>
+              <button className="text-orange-400 hover:text-orange-300">Try It →</button>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-6 border border-green-700/30 hover:border-green-500/50 transition-all cursor-pointer">
+          <div className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-yellow-500/50 transition-all cursor-pointer">
             <div className="text-4xl mb-4">🚗</div>
             <h3 className="text-xl font-bold text-white mb-2">Should I Buy a Car?</h3>
-            <p className="text-gray-300 text-sm mb-4">Compare buying vs leasing vs rideshare for your specific situation</p>
+            <p className="text-white/80 text-sm mb-4">Compare buying vs leasing vs rideshare for your specific situation</p>
             <div className="flex items-center justify-between">
               <span className="text-yellow-400 text-sm">⭐ Trending</span>
-              <button className="text-green-400 hover:text-green-300">Try It →</button>
+              <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
             </div>
           </div>
 
           <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
             <div className="text-4xl mb-4">✈️</div>
             <h3 className="text-xl font-bold text-white mb-2">Can I Afford This Trip?</h3>
-            <p className="text-gray-300 text-sm mb-4">Plan your dream vacation without breaking your budget</p>
+            <p className="text-white/80 text-sm mb-4">Plan your dream vacation without breaking your budget</p>
             <div className="flex items-center justify-between">
               <span className="text-orange-400 text-sm">🔥 Hot</span>
               <button className="text-orange-400 hover:text-orange-300">Try It →</button>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-900/50 to-yellow-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-purple-500/50 transition-all cursor-pointer">
+          <div className="bg-gradient-to-br from-orange-900/50 to-yellow-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
             <div className="text-4xl mb-4">🎓</div>
             <h3 className="text-xl font-bold text-white mb-2">Should I Go Back to School?</h3>
-            <p className="text-gray-300 text-sm mb-4">ROI analysis of education vs current earning potential</p>
+            <p className="text-white/80 text-sm mb-4">ROI analysis of education vs current earning potential</p>
             <div className="flex items-center justify-between">
-              <span className="text-gray-400 text-sm">💭 Life Changer</span>
-              <button className="text-orange-400 hover:text-purple-300">Try It →</button>
+              <span className="text-white/70 text-sm">💭 Life Changer</span>
+              <button className="text-orange-400 hover:text-orange-300">Try It →</button>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-teal-500/50 transition-all cursor-pointer">
+          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
             <div className="text-4xl mb-4">💍</div>
             <h3 className="text-xl font-bold text-white mb-2">Can I Afford to Get Married?</h3>
-            <p className="text-gray-300 text-sm mb-4">Wedding costs, combined finances, and lifestyle changes</p>
+            <p className="text-white/80 text-sm mb-4">Wedding costs, combined finances, and lifestyle changes</p>
             <div className="flex items-center justify-between">
-              <span className="text-pink-400 text-sm">💕 Relationship</span>
-              <button className="text-yellow-400 hover:text-teal-300">Try It →</button>
+              <span className="text-orange-400 text-sm">💕 Relationship</span>
+              <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
             </div>
           </div>
 
           <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-yellow-500/50 transition-all cursor-pointer">
             <div className="text-4xl mb-4">🏢</div>
             <h3 className="text-xl font-bold text-white mb-2">Should I Quit My Job?</h3>
-            <p className="text-gray-300 text-sm mb-4">Financial runway for career changes and entrepreneurship</p>
+            <p className="text-white/80 text-sm mb-4">Financial runway for career changes and entrepreneurship</p>
             <div className="flex items-center justify-between">
-              <span className="text-red-400 text-sm">⚡ Bold Move</span>
+              <span className="text-orange-400 text-sm">⚡ Bold Move</span>
               <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
             </div>
           </div>
         </div>
 
         {/* Custom Scenario Builder */}
-        <div className="bg-gradient-to-br from-gray-900/50 to-black rounded-2xl p-8 border border-gray-700/30">
+        <div className="bg-gradient-to-br from-gray-900/50 to-black rounded-2xl p-8 border border-white/20/30">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             🔧 Build Your Own Scenario
           </h2>
-          <p className="text-gray-300 mb-6">Can't find what you're looking for? Create a custom financial scenario and get personalized insights.</p>
+          <p className="text-white/80 mb-6">Can't find what you're looking for? Create a custom financial scenario and get personalized insights.</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -2366,7 +2366,7 @@ const FinancialTherapyPlatform = () => {
               <input 
                 type="text" 
                 placeholder="e.g., Moving to a new city, Starting a business..."
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-400"
               />
             </div>
             <div>
@@ -2374,12 +2374,12 @@ const FinancialTherapyPlatform = () => {
               <input 
                 type="number" 
                 placeholder="$0"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-400"
               />
             </div>
             <div>
               <label className="block text-white font-medium mb-2">Timeline</label>
-              <select className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400">
+              <select className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400">
                 <option value="">Select timeframe...</option>
                 <option value="immediately">Immediately</option>
                 <option value="3months">Within 3 months</option>
@@ -2390,7 +2390,7 @@ const FinancialTherapyPlatform = () => {
             </div>
             <div>
               <label className="block text-white font-medium mb-2">Priority Level</label>
-              <select className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400">
+              <select className="w-full bg-black/80 border border-white/30 rounded-lg p-3 text-white focus:outline-none focus:border-orange-400">
                 <option value="">How important is this?</option>
                 <option value="nice">Nice to have</option>
                 <option value="want">I really want this</option>
@@ -2400,7 +2400,7 @@ const FinancialTherapyPlatform = () => {
             </div>
           </div>
           
-          <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-8 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all">
+          <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 px-8 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 transition-all">
             Analyze My Scenario
           </button>
         </div>
@@ -2416,15 +2416,15 @@ const FinancialTherapyPlatform = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             ℹ️ About FinThera
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-white/80">
             Your AI-powered financial therapy platform
           </p>
         </div>
 
         <div className="space-y-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
             <h2 className="text-2xl font-bold text-white mb-4">🎯 Our Mission</h2>
-            <p className="text-gray-300 text-lg leading-relaxed">
+            <p className="text-white/80 text-lg leading-relaxed">
               FinThera combines the warmth of therapy with the precision of financial planning. 
               We believe that your relationship with money is deeply personal, and generic advice 
               doesn't work. Our AI therapist helps you discover your unique financial personality 
@@ -2432,46 +2432,46 @@ const FinancialTherapyPlatform = () => {
             </p>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
             <h2 className="text-2xl font-bold text-white mb-4">✨ What Makes Us Different</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-semibold text-yellow-400 mb-2">🤖 AI-Powered Therapy</h3>
-                <p className="text-gray-300">Human-like conversations that adapt to your personality and financial situation.</p>
+                <p className="text-white/80">Human-like conversations that adapt to your personality and financial situation.</p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-yellow-400 mb-2">📊 Personalized Insights</h3>
-                <p className="text-gray-300">Every recommendation is tailored to your unique financial archetype and goals.</p>
+                <p className="text-white/80">Every recommendation is tailored to your unique financial archetype and goals.</p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-yellow-400 mb-2">🛠️ Practical Tools</h3>
-                <p className="text-gray-300">Interactive calculators and simulators to test your financial strategies.</p>
+                <p className="text-white/80">Interactive calculators and simulators to test your financial strategies.</p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-yellow-400 mb-2">📚 Continuous Learning</h3>
-                <p className="text-gray-300">Bite-sized lessons that evolve with your financial journey.</p>
+                <p className="text-white/80">Bite-sized lessons that evolve with your financial journey.</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
             <h2 className="text-2xl font-bold text-white mb-4">🔒 Privacy & Security</h2>
-            <p className="text-gray-300 text-lg leading-relaxed">
+            <p className="text-white/80 text-lg leading-relaxed">
               Your financial information is completely private and secure. We use bank-level encryption 
               and never share your personal data. Your conversations with our AI therapist are confidential 
               and designed to help you, not to sell you products.
             </p>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
             <h2 className="text-2xl font-bold text-white mb-4">🚀 Get Started</h2>
-            <p className="text-gray-300 text-lg leading-relaxed mb-6">
+            <p className="text-white/80 text-lg leading-relaxed mb-6">
               Ready to transform your relationship with money? Start with a simple conversation 
               with our AI therapist. No judgment, no pressure—just real talk about your financial life.
             </p>
             <button 
               onClick={() => setCurrentPage('conversation')}
-              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-3 px-8 rounded-lg font-medium hover:from-teal-600 hover:to-purple-600 transition-all"
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-3 px-8 rounded-lg font-medium hover:from-orange-600 hover:to-yellow-600 transition-all"
             >
               Start Your Journey
             </button>

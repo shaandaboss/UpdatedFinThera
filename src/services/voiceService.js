@@ -55,7 +55,7 @@ class VoiceService {
   }
 
   // Main speak function - routes to appropriate provider
-  async speak(text, onStart, onEnd, onError) {
+  async speak(text, onStart, onEnd, onError, voice = null) {
     console.log(`🎯 Voice Service - Provider: ${this.provider}, Has OpenAI Key: ${!!this.openaiApiKey}`);
     
     try {
@@ -65,7 +65,7 @@ class VoiceService {
             console.warn('⚠️ OpenAI provider selected but no API key - falling back to browser');
             return await this.speakBrowser(text, onStart, onEnd, onError);
           }
-          return await this.speakOpenAI(text, onStart, onEnd, onError);
+          return await this.speakOpenAI(text, onStart, onEnd, onError, voice);
         case 'elevenlabs':
           return await this.speakElevenLabs(text, onStart, onEnd, onError);
         default:
@@ -78,19 +78,20 @@ class VoiceService {
   }
 
   // OpenAI Text-to-Speech
-  async speakOpenAI(text, onStart, onEnd, onError) {
+  async speakOpenAI(text, onStart, onEnd, onError, voice = null) {
     if (!this.openaiApiKey) {
       throw new Error('OpenAI API key not provided');
     }
 
-    console.log('🎤 Using OpenAI TTS HD model with voice:', this.config.openai.voice);
+    const selectedVoice = voice || this.config.openai.voice;
+    console.log('🎤 Using OpenAI TTS HD model with voice:', selectedVoice);
     onStart?.();
 
     try {
       const requestBody = {
         model: this.config.openai.model,
         input: text,
-        voice: this.config.openai.voice,
+        voice: selectedVoice,
         speed: this.config.openai.speed,
         response_format: this.config.openai.response_format
       };

@@ -21,7 +21,7 @@ const FinancialTherapyPlatform = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [speechRecognition, setSpeechRecognition] = useState(null);
   const [voiceProvider, setVoiceProvider] = useState('openai');
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState('YOUR_API_KEY_HERE'); // Replace with your actual key locally
   const [selectedVoice, setSelectedVoice] = useState('nova');
   const recognitionRef = useRef(null);
   const currentAudioRef = useRef(null);
@@ -238,7 +238,8 @@ const FinancialTherapyPlatform = () => {
         (error) => {                  // onError
           console.error('Voice synthesis error:', error);
           setIsAISpeaking(false);
-        }
+        },
+        selectedVoice // Pass the selected voice
       );
       
       currentAudioRef.current = audio;
@@ -806,41 +807,36 @@ const FinancialTherapyPlatform = () => {
                 
               </div>
 
-              {/* API Key Input */}
-              {!apiKey && (
-                <div className="mb-4 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-xl">
-                  <div className="text-yellow-400 font-medium mb-2 flex items-center gap-2">
-                    🔑 OpenAI API Key Required for Voice Features
-                  </div>
-                  <div className="flex gap-3">
-                    <input
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Enter your OpenAI API key (sk-...)"
-                      className="flex-1 bg-black/80 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:border-yellow-400 text-sm"
-                    />
-                    <button
-                      onClick={() => {
-                        if (apiKey.trim()) {
-                          initVoiceService(apiKey.trim());
-                        }
-                      }}
-                      disabled={!apiKey.trim()}
-                      className="bg-yellow-500 text-black px-4 py-2 rounded-lg font-medium hover:bg-yellow-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    >
-                      Save
-                    </button>
-                  </div>
-                  <div className="text-yellow-300 text-xs mt-2">
-                    Get your API key from: platform.openai.com/api-keys
+              {/* Voice Selection */}
+              <div className="mb-4 p-4 bg-orange-900/30 border border-orange-700/50 rounded-xl">
+                <div className="text-orange-400 font-medium mb-2 flex items-center gap-2">
+                  🎤 Choose AI Therapist Voice
+                </div>
+                <div className="flex gap-3 items-center">
+                  <select
+                    value={selectedVoice}
+                    onChange={(e) => setSelectedVoice(e.target.value)}
+                    className="flex-1 bg-black/80 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:border-orange-400 text-sm"
+                  >
+                    <option value="alloy">Alloy - Neutral, balanced</option>
+                    <option value="echo">Echo - Male, deeper</option>
+                    <option value="fable">Fable - British accent</option>
+                    <option value="onyx">Onyx - Deep, authoritative</option>
+                    <option value="nova">Nova - Warm, engaging (default)</option>
+                    <option value="shimmer">Shimmer - Soft, friendly</option>
+                  </select>
+                  <div className="text-orange-300 text-xs">
+                    ✅ Voice Ready
                   </div>
                 </div>
-              )}
+                <div className="text-orange-300 text-xs mt-2">
+                  Your AI therapist will speak with the selected voice
+                </div>
+              </div>
 
               {/* Big Record Button Interface */}
               <div className="flex flex-col items-center gap-4">
-                {speechRecognition && apiKey ? (
+                {speechRecognition ? (
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
                     className={`w-32 h-32 rounded-full transition-all duration-300 flex flex-col items-center justify-center text-white font-bold text-lg shadow-2xl transform hover:scale-105 ${
@@ -863,8 +859,8 @@ const FinancialTherapyPlatform = () => {
                   </button>
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-black/80 border-2 border-white/30 flex flex-col items-center justify-center text-white/70">
-                    <div className="text-4xl mb-2">🔑</div>
-                    <div className="text-xs text-center">API Key Required</div>
+                    <div className="text-4xl mb-2">🚫</div>
+                    <div className="text-xs text-center">Voice Not Supported</div>
                   </div>
                 )}
                 
@@ -884,14 +880,15 @@ const FinancialTherapyPlatform = () => {
                       <div className="font-medium">Ready to record your response</div>
                       <div className="text-sm text-white/70">Click the microphone to start</div>
                     </div>
-                  ) : !apiKey ? (
-                    <div className="text-yellow-400">
-                      <div className="font-medium">Enter your API key above to enable voice recording</div>
-                    </div>
-                  ) : (
+                  ) : !speechRecognition ? (
                     <div className="text-white/70">
                       <div className="font-medium">Voice recording not supported in this browser</div>
                       <div className="text-sm">Try Chrome, Edge, or Safari</div>
+                    </div>
+                  ) : (
+                    <div className="text-white/80">
+                      <div className="font-medium">Voice ready - click microphone to start</div>
+                      <div className="text-sm text-white/70">Your therapist will speak with {selectedVoice} voice</div>
                     </div>
                   )}
                 </div>

@@ -12,7 +12,7 @@ const FinancialTherapyPlatform = () => {
 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [currentConversationStep, setCurrentConversationStep] = useState('intro');
+  const [conversationCount, setConversationCount] = useState(0);
   const [conversationResponses, setConversationResponses] = useState({});
   const [showConversationResults, setShowConversationResults] = useState(false);
   const [personalizedInsights, setPersonalizedInsights] = useState([]);
@@ -23,8 +23,14 @@ const FinancialTherapyPlatform = () => {
   const [voiceProvider, setVoiceProvider] = useState('openai');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
   const [selectedVoice, setSelectedVoice] = useState('nova');
+  
+  // Scenarios page state
+  const [selectedScenario, setSelectedScenario] = useState(null);
+  const [scenarioInputs, setScenarioInputs] = useState({});
   const recognitionRef = useRef(null);
   const currentAudioRef = useRef(null);
+  const currentTranscriptRef = useRef('');
+  const isManualStopRef = useRef(false);
 
   // Initialize voice service with API key on mount
   useEffect(() => {
@@ -97,18 +103,13 @@ const FinancialTherapyPlatform = () => {
 
 
 
-  // Initialize voice conversation
+  // Initialize therapeutic conversation
   useEffect(() => {
     if (currentPage === 'conversation' && chatMessages.length === 0) {
       setChatMessages([
         {
           type: 'therapist',
-          message: "Hey there! So nice to meet you. I'm here because, honestly, talking about money can be weird and uncomfortable, but it doesn't have to be. I'm just genuinely curious about your relationship with money - no judgment, no lectures, just real conversation.",
-          timestamp: new Date()
-        },
-        {
-          type: 'therapist',
-          message: "Hey! So I'm curious... what's been the best thing you've spent money on lately? Like, something that just made you feel good about the purchase?",
+          message: "Hi there! I'm really glad you're here. I'm genuinely curious about your relationship with money - not to judge or lecture, just to understand. So let me start with this: when you think about your financial life right now, what feelings come up for you?",
           timestamp: new Date()
         }
       ]);
@@ -125,53 +126,92 @@ const FinancialTherapyPlatform = () => {
           await navigator.mediaDevices.getUserMedia({ audio: true });
           
           const recognition = new SpeechRecognition();
-          recognition.continuous = false;
+          recognition.continuous = true; // Keep listening until manually stopped
           recognition.interimResults = true;
           recognition.lang = 'en-US';
           
-          recognition.onstart = () => setIsRecording(true);
+          recognition.onstart = () => {
+            setIsRecording(true);
+            currentTranscriptRef.current = ''; // Reset transcript when starting new recording
+            isManualStopRef.current = false; // Reset manual stop flag
+          };
           
           recognition.onresult = (event) => {
+            let interimTranscript = '';
             let finalTranscript = '';
+            
             for (let i = event.resultIndex; i < event.results.length; i++) {
               const transcript = event.results[i][0].transcript;
               if (event.results[i].isFinal) {
                 finalTranscript += transcript;
+              } else {
+                interimTranscript += transcript;
               }
             }
+            
+            // Accumulate final results
             if (finalTranscript) {
-              const trimmedTranscript = finalTranscript.trim();
-              setChatInput(trimmedTranscript);
-              setIsRecording(false);
-              
-              // Auto-send the voice message
-              setTimeout(() => {
-                if (trimmedTranscript) {
-                  // Create message object
-                  const newMessage = {
-                    type: 'user',
-                    message: trimmedTranscript,
+              currentTranscriptRef.current += finalTranscript;
+            }
+            
+            // Update chat input with accumulated final + current interim
+            const fullTranscript = currentTranscriptRef.current + interimTranscript;
+            setChatInput(fullTranscript.trim());
+          };
+          
+          recognition.onend = () => {
+            setIsRecording(false);
+            
+            // Only process when manually stopped (not auto-stopped)
+            if (isManualStopRef.current) {
+              const finalMessage = currentTranscriptRef.current.trim();
+              if (finalMessage) {
+                // Process the complete voice message
+                const newMessage = {
+                  type: 'user',
+                  message: finalMessage,
+                  timestamp: new Date()
+                };
+                
+                setChatMessages(prev => [...prev, newMessage]);
+                
+                // Update conversation count and store response
+                const newCount = conversationCount + 1;
+                setConversationCount(newCount);
+                
+                const updatedResponses = {
+                  ...conversationResponses,
+                  [`message_${newCount}`]: finalMessage
+                };
+                setConversationResponses(updatedResponses);
+                
+                // Clear input and generate conversational response
+                setChatInput('');
+                
+                setTimeout(() => {
+                  // Generate structured conversation response
+                  const therapistMessage = getDynamicConversationResponse(finalMessage, newCount);
+                  
+                  const therapistResponse = {
+                    type: 'therapist',
+                    message: therapistMessage,
                     timestamp: new Date()
                   };
-                  
-                  setChatMessages(prev => [...prev, newMessage]);
-                  
-                  // Store conversation response
-                  setConversationResponses(prev => ({
-                    ...prev,
-                    [currentConversationStep]: trimmedTranscript
-                  }));
-                  
-                  // Clear input and process next step
-                  setChatInput('');
-                  setTimeout(() => processConversationStep(), 1000);
-                }
-              }, 100);
+                  setChatMessages(prev => [...prev, therapistResponse]);
+                }, 1500);
+              }
+              
+              // Reset for next recording
+              currentTranscriptRef.current = '';
+              isManualStopRef.current = false;
             }
           };
           
-          recognition.onerror = () => setIsRecording(false);
-          recognition.onend = () => setIsRecording(false);
+          recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            setIsRecording(false);
+            currentTranscriptRef.current = '';
+          };
           
           recognitionRef.current = recognition;
           setSpeechRecognition(recognition);
@@ -200,12 +240,13 @@ const FinancialTherapyPlatform = () => {
       return;
     }
     
+    if (isRecording) return; // Already recording
+    
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (!isRecording) {
-        setChatInput('');
-        recognitionRef.current.start();
-      }
+      setChatInput('');
+      currentTranscriptRef.current = '';
+      recognitionRef.current.start();
     } catch (error) {
       alert('Unable to access microphone. Please check your browser settings.');
     }
@@ -213,6 +254,7 @@ const FinancialTherapyPlatform = () => {
 
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
+      isManualStopRef.current = true; // Mark as manual stop
       recognitionRef.current.stop();
     }
   };
@@ -266,39 +308,195 @@ const FinancialTherapyPlatform = () => {
     }
   };
 
-  // Therapy conversation flow
-  const therapyFlow = [
+  // Therapeutic conversation questions
+  const therapyQuestions = [
     {
-      id: 'intro',
-      question: "Hey! So I'm curious... what's been the best thing you've spent money on lately? Like, something that just made you feel good about the purchase?",
-      followUp: "That sounds really nice! I love hearing about purchases that actually bring joy. Now, can I ask you about the flip side? We've all been there - what's something you bought and then immediately thought 'why did I do that?' Don't worry, no judgment here!"
+      id: 'feelings',
+      question: "When you think about your financial life right now, what feelings come up for you?",
+      used: false
     },
     {
-      id: 'guilt_spending',
-      question: "What's something you bought and then immediately thought 'why did I do that?' Don't worry, no judgment here!",
-      followUp: "Oh trust me, we've ALL been there! That's so human. Let me ask you something more fun - imagine you woke up this Saturday and found $200 in your pocket that you forgot about. What would you actually do with it? And I mean realistically, not what you think you 'should' do."
+      id: 'good_decision',
+      question: "Tell me about a money decision you made recently that you felt really good about — what made it feel right?",
+      used: false
     },
     {
-      id: 'ideal_weekend',
-      question: "Imagine you woke up this Saturday and found $200 in your pocket that you forgot about. What would you actually do with it? Realistically, not what you think you 'should' do.",
-      followUp: "I love that! It's so interesting how we think about 'found money' differently. Here's something I'm genuinely curious about - most people have no idea how much they actually spend in a typical week. Do you have any sense of yours? Even a wild guess is totally fine."
+      id: 'bad_decision', 
+      question: "Was there a money choice you made that didn't sit well with you — what do you think led to that?",
+      used: false
     },
     {
-      id: 'weekly_spending',
-      question: "Most people have no idea how much they actually spend in a typical week. Do you have any sense of yours? Even a wild guess is totally fine.",
-      followUp: "You know what's fascinating? Everyone has such a different relationship with money. Some people get excited, some get anxious, some just feel... blah. When I say the word 'money' to you right now, what's the first thing that comes up? Not what you think it should be - just whatever pops into your head."
+      id: 'daily_approach',
+      question: "What's your current approach to handling money day-to-day — do you plan, track, or just go with the flow?",
+      used: false
     },
     {
-      id: 'money_feelings',
-      question: "When I say the word 'money' to you right now, what's the first thing that comes up? Not what you think it should be - just whatever pops into your head.",
-      followUp: "That's really insightful, thank you for sharing that. Here's my last question, and it's kind of fun - is there something you've been wanting to buy or do, but every time you think about it, you're like 'ugh, that's too expensive'? What is it?"
+      id: 'upbringing',
+      question: "Growing up, how did the people around you (family, friends) influence how you think about money today?",
+      used: false
     },
     {
-      id: 'big_want',
-      question: "Is there something you've been wanting to buy or do, but every time you think about it, you're like 'ugh, that's too expensive'? What is it?",
-      followUp: "Wow, thank you for being so open with me! This has been such a genuine conversation. I feel like I really understand your relationship with money now. Give me just a moment to put together some insights based on everything you've shared - I think you might be surprised by what I found..."
+      id: 'zero_stress',
+      question: "If you had zero money stress for the next year, how would your life look different?",
+      used: false
+    },
+    {
+      id: 'wish_change',
+      question: "What's one thing about your money situation that you wish could change right now?",
+      used: false
+    },
+    {
+      id: 'freedom_meaning',
+      question: "Looking at the bigger picture, what does 'financial freedom' mean to you personally?",
+      used: false
+    },
+    {
+      id: 'barriers',
+      question: "What usually holds you back from making the money moves you know you should?",
+      used: false
+    },
+    {
+      id: 'small_habit',
+      question: "If we could work on one small money habit together that would make your life easier, where would you want to start?",
+      used: false
     }
   ];
+
+  // Dynamic conversation system based on user responses
+  const getDynamicConversationResponse = (userResponse, messageCount, usedQuestions = []) => {
+    const response = userResponse.toLowerCase();
+    let acknowledgment = "";
+    let nextQuestion = "";
+    
+    console.log(`🎯 Conversation - Message count: ${messageCount}, User response: "${userResponse}"`);
+    
+    // Always start with feelings question
+    if (messageCount === 1) {
+      // Acknowledge their emotional response
+      if (response.includes('stress') || response.includes('anxiety') || response.includes('overwhelm') || response.includes('worried')) {
+        acknowledgment = "I can really hear that stress in what you're sharing. Money anxiety affects so many people, and it touches everything in life, doesn't it? ";
+        // Follow up with either zero stress vision or barriers question
+        nextQuestion = "If you had zero money stress for the next year, how would your life look different?";
+      } else if (response.includes('confused') || response.includes('complicated') || response.includes('lost') || response.includes('don\'t know')) {
+        acknowledgment = "That feeling of confusion around money is so relatable. It can feel like everyone else has it figured out while you're just winging it. ";
+        // Follow up with daily approach question
+        nextQuestion = "What's your current approach to handling money day-to-day — do you plan, track, or just go with the flow?";
+      } else if (response.includes('good') || response.includes('fine') || response.includes('stable') || response.includes('confident')) {
+        acknowledgment = "That's wonderful to hear! It sounds like you've found some stability and confidence with money. ";
+        // Follow up with good decision question
+        nextQuestion = "Tell me about a money decision you made recently that you felt really good about — what made it feel right?";
+      } else if (response.includes('frustrated') || response.includes('angry') || response.includes('annoyed')) {
+        acknowledgment = "I can feel that frustration. Money can be so emotionally charged, especially when it feels like it's not cooperating with your plans. ";
+        // Follow up with barriers question
+        nextQuestion = "What usually holds you back from making the money moves you know you should?";
+      } else {
+        acknowledgment = "Thank you for being so honest with me about that. ";
+        // Default to good decision question
+        nextQuestion = "Tell me about a money decision you made recently that you felt really good about — what made it feel right?";
+      }
+    }
+    
+    // Second exchange - respond to their previous answer and choose next question intelligently
+    else if (messageCount === 2) {
+      // Handle repetition complaints first
+      if (response.includes('asked') || response.includes('already') || response.includes('repeat') || response.includes('same')) {
+        acknowledgment = "You're absolutely right, I apologize for that repetition. Let me ask you something different. ";
+        nextQuestion = "What's one thing about your money situation that you wish could change right now?";
+      }
+      // Acknowledge what they shared about their good decision
+      else if (response.includes('bought') || response.includes('purchase') || response.includes('spend')) {
+        acknowledgment = "That sounds like it brought you real satisfaction. Those purchases that align with our values feel so different, don't they? ";
+        nextQuestion = "Was there a money choice you made that didn't sit well with you — what do you think led to that?";
+      } else if (response.includes('travel') || response.includes('experience') || response.includes('trip')) {
+        acknowledgment = "Experiences like that tend to stick with us in such meaningful ways. Those memories become part of who we are. ";
+        nextQuestion = "What's one thing about your money situation that you wish could change right now?";
+      } else if (response.includes('save') || response.includes('emergency') || response.includes('fund')) {
+        acknowledgment = "Building that safety net shows real foresight. There's something so calming about knowing you're prepared. ";
+        nextQuestion = "Growing up, how did the people around you (family, friends) influence how you think about money today?";
+      } else if (response.includes('invest') || response.includes('stock') || response.includes('401k') || response.includes('retirement')) {
+        acknowledgment = "That's fantastic that you're thinking about your future self. Investing can feel intimidating but you took action. ";
+        nextQuestion = "What usually holds you back from making the money moves you know you should?";
+      } else {
+        acknowledgment = "Thank you for sharing that with me. ";
+        nextQuestion = "What's one thing about your money situation that you wish could change right now?";
+      }
+    }
+    
+    // Third exchange and beyond - continue building on their responses
+    else if (messageCount >= 3 && messageCount <= 6) {
+      // Handle repetition complaints first
+      if (response.includes('asked') || response.includes('already') || response.includes('repeat') || response.includes('same')) {
+        acknowledgment = "I hear you - let me move to a different topic. ";
+        // Skip ahead in the question sequence
+        const skipAheadQuestions = [
+          "Looking at the bigger picture, what does 'financial freedom' mean to you personally?",
+          "If we could work on one small money habit together that would make your life easier, where would you want to start?",
+          "What's something about money that you learned the hard way?",
+          "When you think about your financial future, what excites you most?"
+        ];
+        nextQuestion = skipAheadQuestions[Math.min(messageCount - 3, skipAheadQuestions.length - 1)];
+      } else {
+        // Keep acknowledging and diving deeper
+        acknowledgment = generateContextualAcknowledgment(response);
+        
+        // Choose from remaining relevant questions in sequence
+        const remainingQuestions = [
+          "Looking at the bigger picture, what does 'financial freedom' mean to you personally?",
+          "Growing up, how did the people around you (family, friends) influence how you think about money today?",
+          "Was there a money choice you made that didn't sit well with you — what do you think led to that?",
+          "If we could work on one small money habit together that would make your life easier, where would you want to start?"
+        ];
+        
+        nextQuestion = remainingQuestions[Math.min(messageCount - 3, remainingQuestions.length - 1)];
+      }
+    }
+    
+    // Final exchange - wrap up
+    else if (messageCount >= 7) {
+      acknowledgment = generateContextualAcknowledgment(response);
+      acknowledgment += "This conversation has been so genuine and revealing. I feel like I'm really starting to understand your unique relationship with money - your hopes, your challenges, the way you think about the future. ";
+      
+      // Trigger final insights
+      setTimeout(() => {
+        console.log('🎯 Triggering final insights generation...');
+        try {
+          generateLifestyleAnalysis();
+        } catch (error) {
+          console.error('❌ Error generating insights:', error);
+        }
+        
+        setTimeout(() => {
+          console.log('🎯 Setting showConversationResults to true');
+          setShowConversationResults(true);
+          setUserJourney(prev => ({
+            ...prev,
+            hasCompletedConversation: true,
+            currentStep: 'profile'
+          }));
+        }, 500); // Shorter delay
+      }, 1500);
+      
+      return acknowledgment + "Let me take a moment to put together some personalized insights based on everything you've shared. I think you might be surprised by what patterns I've noticed...";
+    }
+    
+    return acknowledgment + nextQuestion;
+  };
+
+  // Generate contextual acknowledgments based on what user said
+  const generateContextualAcknowledgment = (response) => {
+    if (response.includes('family') || response.includes('parents') || response.includes('grew up')) {
+      return "Those early experiences with money really shape us, don't they? The messages we got as kids often stick with us way longer than we realize. ";
+    } else if (response.includes('freedom') || response.includes('security') || response.includes('peace')) {
+      return "That vision of freedom and security is so powerful. When you can see what you're working toward, it changes everything. ";
+    } else if (response.includes('mistake') || response.includes('regret') || response.includes('bad decision')) {
+      return "We all have those money decisions we'd love to take back. But those experiences teach us so much about ourselves. ";
+    } else if (response.includes('habit') || response.includes('routine') || response.includes('small steps')) {
+      return "I love that you're thinking about small, manageable changes. That's often where the real transformation happens. ";
+    } else {
+      return "That's such an honest and thoughtful response. ";
+    }
+  };
+
 
   const sendMessage = () => {
     if (!chatInput.trim()) return;
@@ -311,43 +509,26 @@ const FinancialTherapyPlatform = () => {
 
     setChatMessages(prev => [...prev, newUserMessage]);
 
-    const currentStepData = therapyFlow.find(step => step.id === currentConversationStep);
-    if (currentStepData) {
-      setConversationResponses(prev => ({
-        ...prev,
-        [currentConversationStep]: chatInput
-      }));
-    }
+    // Update conversation count and store response
+    const newCount = conversationCount + 1;
+    setConversationCount(newCount);
+    
+    const updatedResponses = {
+      ...conversationResponses,
+      [`message_${newCount}`]: chatInput
+    };
+    setConversationResponses(updatedResponses);
 
     setTimeout(() => {
-      const stepIndex = therapyFlow.findIndex(step => step.id === currentConversationStep);
-      if (stepIndex !== -1 && stepIndex < therapyFlow.length - 1) {
-        const currentStepData = therapyFlow[stepIndex];
-        const therapistResponse = {
-          type: 'therapist',
-          message: currentStepData.followUp,
-          timestamp: new Date()
-        };
-        setChatMessages(prev => [...prev, therapistResponse]);
-        setCurrentConversationStep(therapyFlow[stepIndex + 1].id);
-      } else {
-        const finalResponse = {
-          type: 'therapist',
-          message: "Alright, this is getting interesting! Let me crunch these numbers and show you what I found...",
-          timestamp: new Date()
-        };
-        setChatMessages(prev => [...prev, finalResponse]);
-        
-        setTimeout(() => {
-          generateLifestyleAnalysis();
-          setShowConversationResults(true);
-          setUserJourney(prev => ({
-            ...prev,
-            hasCompletedConversation: true,
-            currentStep: 'profile'
-          }));
-        }, 2000);
-      }
+      // Generate structured conversation response
+      const therapistMessage = getDynamicConversationResponse(chatInput, newCount);
+      
+      const therapistResponse = {
+        type: 'therapist',
+        message: therapistMessage,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, therapistResponse]);
     }, 1500);
 
     setChatInput('');
@@ -398,17 +579,282 @@ const FinancialTherapyPlatform = () => {
     };
   };
 
+  // Analyze therapeutic conversation responses for personalized insights
+  const analyzeTherapeuticResponses = (responses, allText) => {
+    const insights = [];
+    
+    // Analyze emotional patterns from first response (feelings question)
+    const message1 = responses.message_1?.toLowerCase() || '';
+    let emotionalArchetype = null;
+    
+    if (message1.includes('stress') || message1.includes('anxiety') || message1.includes('overwhelm') || message1.includes('worried')) {
+      emotionalArchetype = {
+        category: "🧠 Your Money Mindset",
+        title: "💭 The Thoughtful Worrier",
+        description: "You're deeply aware of how money affects your emotional well-being. This consciousness is actually a superpower—most people ignore these feelings and make poor decisions.",
+        deepInsight: "Your financial anxiety might be your intuition telling you to take more control of your money situation.",
+        actionItems: [
+          "Start with a simple 'money check-in' once a week to acknowledge your feelings",
+          "Create an emergency fund of just $500 first—small wins build confidence",
+          "Use the '24-hour rule' for purchases over $100 to reduce impulse stress"
+        ]
+      };
+    } else if (message1.includes('confused') || message1.includes('complicated') || message1.includes('lost') || message1.includes('don\'t know')) {
+      emotionalArchetype = {
+        category: "🧠 Your Money Mindset", 
+        title: "🗺️ The Authentic Explorer",
+        description: "Your confusion isn't weakness—it's honesty. You're not pretending to have it all figured out, which means you're open to learning and growing.",
+        deepInsight: "The fact that you admit confusion shows emotional intelligence that many 'confident' people lack.",
+        actionItems: [
+          "Start tracking just one thing: where your money goes each week",
+          "Read one personal finance article per week—build knowledge slowly",
+          "Find one person whose financial approach you admire and ask them questions"
+        ]
+      };
+    } else if (message1.includes('good') || message1.includes('fine') || message1.includes('stable') || message1.includes('confident')) {
+      emotionalArchetype = {
+        category: "🧠 Your Money Mindset",
+        title: "🎯 The Grounded Optimist", 
+        description: "Your financial confidence is rare and valuable. You've likely developed healthy money habits that serve as a foundation for bigger goals.",
+        deepInsight: "Your stability gives you the freedom to take calculated risks that others can't afford.",
+        actionItems: [
+          "Consider increasing your investing rate by 1-2% since you have a solid foundation",
+          "Explore higher-yield opportunities like index funds or real estate",
+          "Use your confidence to help others—teaching reinforces your own knowledge"
+        ]
+      };
+    } else {
+      emotionalArchetype = {
+        category: "🧠 Your Money Mindset",
+        title: "⚡ The Reflective Realist",
+        description: "Your nuanced relationship with money shows emotional maturity. You understand that finances are personal and complex.",
+        deepInsight: "Your ability to see money's complexity will help you make more thoughtful decisions than people who oversimplify.",
+        actionItems: [
+          "Trust your instincts—they're more sophisticated than generic advice",
+          "Create a personal mission statement for your money",
+          "Focus on systems that align with your values rather than chasing returns"
+        ]
+      };
+    }
+    
+    insights.push(emotionalArchetype);
+    
+    // Analyze decision-making patterns from good/bad decision responses
+    const decisionPatterns = analyzeDecisionPatterns(allText);
+    if (decisionPatterns) insights.push(decisionPatterns);
+    
+    // Analyze barriers and motivations
+    const barrierAnalysis = analyzeBarriers(allText);
+    if (barrierAnalysis) insights.push(barrierAnalysis);
+    
+    // Analyze family influences if mentioned
+    const familyInfluence = analyzeFamilyInfluence(allText);
+    if (familyInfluence) insights.push(familyInfluence);
+    
+    // Generate overall financial archetype
+    const archetype = getAdvancedFinancialArchetype(allText, responses);
+    insights.push(archetype);
+    
+    return insights;
+  };
+  
+  // Analyze decision-making patterns
+  const analyzeDecisionPatterns = (text) => {
+    if (text.includes('research') || text.includes('plan') || text.includes('compare') || text.includes('think')) {
+      return {
+        category: "💡 Your Decision Style",
+        title: "🔍 The Methodical Analyst",
+        description: "You naturally research and analyze before making money moves. This careful approach protects you from costly mistakes.",
+        deepInsight: "Your tendency to overthink might sometimes prevent you from taking action when you should.",
+        actionItems: [
+          "Set decision deadlines—give yourself 1 week max for purchases under $1000",
+          "Create a simple decision framework with 3 key criteria",
+          "Remember: a good decision made quickly often beats a perfect decision made too late"
+        ]
+      };
+    } else if (text.includes('gut') || text.includes('feeling') || text.includes('intuition') || text.includes('instant')) {
+      return {
+        category: "💡 Your Decision Style", 
+        title: "⚡ The Intuitive Mover",
+        description: "You trust your instincts and make decisions quickly. This confidence allows you to seize opportunities others miss.",
+        deepInsight: "Your quick decision-making is a strength, but adding just a little analysis could improve your hit rate.",
+        actionItems: [
+          "Keep trusting your gut—it's gotten you this far", 
+          "Add a simple 'sleep on it' rule for decisions over $500",
+          "Track your intuitive decisions to see patterns in what works vs. what doesn't"
+        ]
+      };
+    }
+    return null;
+  };
+  
+  // Analyze barriers and limitations
+  const analyzeBarriers = (text) => {
+    if (text.includes('time') || text.includes('busy') || text.includes('overwhelm')) {
+      return {
+        category: "🚧 Your Key Challenge",
+        title: "⏰ The Time Crunch",
+        description: "You know what you should do with money, but finding time to actually do it feels impossible.",
+        deepInsight: "The 'I don't have time' barrier often masks fear or confusion about where to start.",
+        actionItems: [
+          "Automate everything possible—savings, investments, bill payments",
+          "Batch money tasks: do everything financial on Sunday mornings",
+          "Use apps that require less than 5 minutes: Mint, YNAB, or your bank's app"
+        ]
+      };
+    } else if (text.includes('knowledge') || text.includes('understand') || text.includes('learn') || text.includes('complicated')) {
+      return {
+        category: "🚧 Your Key Challenge",
+        title: "📚 The Knowledge Gap",
+        description: "You're smart enough to know you don't know everything about money, which actually puts you ahead of most people.",
+        deepInsight: "Analysis paralysis often comes from trying to learn everything before taking any action.",
+        actionItems: [
+          "Start with basics: emergency fund, then employer 401k match, then index funds",
+          "Learn while doing—start investing $50/month while you read about investing",
+          "Focus on principles over tactics—Warren Buffett's advice beats day trading tips"
+        ]
+      };
+    }
+    return null;
+  };
+  
+  // Analyze family and background influences
+  const analyzeFamilyInfluence = (text) => {
+    if (text.includes('family') || text.includes('parents') || text.includes('grew up') || text.includes('childhood')) {
+      let title = "👨‍👩‍👧‍👦 Your Money Story";
+      let description = "Your family's approach to money has shaped your relationship with finances in ways you might not even realize.";
+      let insight = "";
+      let actions = [];
+      
+      if (text.includes('strict') || text.includes('careful') || text.includes('save')) {
+        title = "💪 The Saver's Legacy";
+        description = "You learned the value of saving and being careful with money from your family. This foundation serves you well.";
+        insight = "Your conservative approach might be holding you back from wealth-building opportunities.";
+        actions = [
+          "Honor your family's wisdom while updating it for today's economy",
+          "Consider that 'risky' investing might actually be riskier than not investing due to inflation",
+          "Start small with investing—your family's discipline will serve you well"
+        ];
+      } else if (text.includes('stress') || text.includes('fight') || text.includes('struggle') || text.includes('tight')) {
+        title = "🌱 The Resilience Builder";
+        description = "Growing up around money stress taught you resourcefulness and the real value of financial security.";
+        insight = "Your fear of financial instability, while protective, might be preventing you from taking growth opportunities.";
+        actions = [
+          "Recognize that your money fears come from a place of protection, not weakness",
+          "Build confidence with small wins—save $1000, then $5000, then invest",
+          "Create multiple income streams to feel more secure"
+        ];
+      } else {
+        title = "🎯 The Independent Thinker";
+        description = "You're creating your own relationship with money, separate from your family's approach.";
+        insight = "Your independence is powerful, but don't be afraid to learn from others' experiences.";
+        actions = [
+          "Define what financial success means to YOU, not your family or society",
+          "Take the best from your family's approach and leave the rest",
+          "Find mentors who have the financial life you want"
+        ];
+      }
+      
+      return {
+        category: "🏠 Your Origins",
+        title,
+        description,
+        deepInsight: insight,
+        actionItems: actions
+      };
+    }
+    return null;
+  };
+  
+  // Advanced financial archetype based on conversation
+  const getAdvancedFinancialArchetype = (text, responses) => {
+    // Analyze multiple dimensions
+    const isSecurityFocused = text.includes('security') || text.includes('safe') || text.includes('stable') || text.includes('emergency');
+    const isGrowthFocused = text.includes('grow') || text.includes('invest') || text.includes('build') || text.includes('future');
+    const isExperienceFocused = text.includes('travel') || text.includes('experience') || text.includes('enjoy') || text.includes('memories');
+    const isFreedomFocused = text.includes('freedom') || text.includes('independent') || text.includes('choice') || text.includes('control');
+    
+    if (isFreedomFocused && isGrowthFocused) {
+      return {
+        category: "🎯 Your Financial Archetype",
+        title: "🚀 The Freedom Builder",
+        description: "You see money as the key to personal freedom and choices. You're willing to sacrifice now for independence later.",
+        deepInsight: "Your drive for freedom might make you too focused on the future—remember to enjoy the journey.",
+        actionItems: [
+          "Set up automatic investing so freedom building happens without constant decisions",
+          "Calculate your 'freedom number'—the amount that would make you financially independent",
+          "Create a 'freedom fund' separate from emergency savings for opportunities"
+        ]
+      };
+    } else if (isExperienceFocused) {
+      return {
+        category: "🎯 Your Financial Archetype", 
+        title: "✨ The Life Maximizer",
+        description: "You understand that money is meant to be used to create meaningful experiences and memories.",
+        deepInsight: "Your focus on experiences is wise, but don't neglect your future self who will also want choices.",
+        actionItems: [
+          "Use the 50/30/20 rule: 50% needs, 30% experiences, 20% future",
+          "Create an 'experience fund' that makes spending on memories guilt-free",
+          "Consider experiences that also build wealth: travel while working remotely, etc."
+        ]
+      };
+    } else if (isSecurityFocused) {
+      return getFinancialArchetype(text); // Use existing logic for security-focused
+    } else {
+      return {
+        category: "🎯 Your Financial Archetype",
+        title: "🎨 The Balanced Creator", 
+        description: "You're creating a unique approach to money that balances security, growth, and enjoyment based on your values.",
+        deepInsight: "Your balanced approach is sophisticated—trust the process as you find what works for you.",
+        actionItems: [
+          "Continue experimenting with different approaches until you find your sweet spot",
+          "Track what gives you the most satisfaction per dollar spent", 
+          "Don't let others' financial goals pressure you into their strategies"
+        ]
+      };
+    }
+  };
+
   const generateLifestyleAnalysis = () => {
-    const conversationValues = Object.values(conversationResponses).filter(Boolean).join(' ').toLowerCase();
-    const lifeValuesInsights = [getFinancialArchetype(conversationValues)];
-    setPersonalizedInsights(lifeValuesInsights);
+    const responses = conversationResponses;
+    const allResponsesText = Object.values(responses).filter(Boolean).join(' ').toLowerCase();
+    
+    console.log('🔍 Generating insights with responses:', responses);
+    console.log('🔍 All text:', allResponsesText);
+    
+    // Analyze therapeutic conversation responses
+    const insights = analyzeTherapeuticResponses(responses, allResponsesText);
+    console.log('🔍 Generated insights:', insights);
+    
+    // Use insights or fallback
+    let finalInsights;
+    if (insights && insights.length > 0) {
+      finalInsights = insights;
+      setPersonalizedInsights(insights);
+      console.log('✅ Insights set successfully');
+    } else {
+      console.error('❌ No insights generated, using fallback');
+      // Fallback insights if analysis fails
+      finalInsights = [{
+        category: "🧠 Your Money Mindset",
+        title: "📝 The Thoughtful Responder",
+        description: "You've shared valuable insights about your relationship with money. Your responses show genuine self-reflection and awareness.",
+        deepInsight: "Your willingness to engage in this conversation shows you're ready to make positive changes in your financial life.",
+        actionItems: [
+          "Continue this self-reflection by reviewing your responses",
+          "Identify 1-2 key patterns you noticed about yourself",
+          "Set a small, achievable financial goal based on what you learned"
+        ]
+      }];
+      setPersonalizedInsights(finalInsights);
+    }
     
     setFinancialProfile(prev => ({
       ...prev,
       lifeValues: {
         coreMotivations: ['Personal Growth'],
         personalityType: 'Balanced Explorer',
-        financialArchetype: lifeValuesInsights.find(i => i.category.includes('Archetype'))?.title || 'The Balanced Seeker',
+        financialArchetype: finalInsights.find(i => i.category.includes('Archetype'))?.title || 'The Balanced Seeker',
         hiddenFears: ['Uncertainty about the future'],
         behavioralPatterns: ['Thoughtful decision-making']
       }
@@ -735,7 +1181,7 @@ const FinancialTherapyPlatform = () => {
   const renderConversationPage = () => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black">
       {showConversationResults ? renderConversationResults() : (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
               💬 Financial Therapy Session
@@ -774,119 +1220,183 @@ const FinancialTherapyPlatform = () => {
             </div>
           </div>
 
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-3xl border border-white/20 h-[700px] flex flex-col">
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {chatMessages.map((msg, index) => (
-                <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                    msg.type === 'user'
-                      ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white'
-                      : 'bg-black/80/70 text-gray-100'
-                  }`}>
-                    {msg.type === 'therapist' && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">🤖</span>
-                        <span className="text-xs text-white/80 font-medium">Your Financial Therapist</span>
-                        {isAISpeaking && index === chatMessages.length - 1 && (
-                          <div className="flex items-center gap-1">
-                            <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse"></div>
-                            <div className="w-1 h-4 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                            <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                          </div>
-                        )}
-                      </div>
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Side: Input Controls */}
+            <div className="bg-black/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+              <h2 className="text-xl font-bold text-white mb-6 text-center">Your Response</h2>
+              
+              {/* Voice Controls */}
+              <div className="mb-8">
+                <div className="text-center mb-4">
+                  <div className="text-white/80 font-medium mb-2">🎤 Voice Option</div>
+                  <div className="text-white/60 text-sm">Click to record your response</div>
+                </div>
+                
+                <div className="flex flex-col items-center gap-4">
+                  {speechRecognition ? (
+                    <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`w-24 h-24 rounded-full transition-all duration-300 flex flex-col items-center justify-center text-white font-bold text-sm shadow-2xl transform hover:scale-105 ${
+                        isRecording 
+                          ? 'bg-gradient-to-br from-orange-600 to-yellow-600 animate-pulse shadow-orange-500/50 border-4 border-orange-300' 
+                          : 'bg-gradient-to-br from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 shadow-orange-500/30'
+                      }`}
+                    >
+                      {isRecording ? (
+                        <>
+                          <div className="text-2xl mb-1">⏹️</div>
+                          <div className="text-xs">Stop</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-2xl mb-1">🎤</div>
+                          <div className="text-xs">Record</div>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-black/80 border-2 border-white/30 flex flex-col items-center justify-center text-white/70">
+                      <div className="text-2xl mb-1">🚫</div>
+                      <div className="text-xs text-center">No Voice</div>
+                    </div>
+                  )}
+                  
+                  <div className="text-center text-sm">
+                    {isRecording ? (
+                      <div className="text-orange-400 font-medium">🎤 Listening...</div>
+                    ) : speechRecognition ? (
+                      <div className="text-white/80">Ready to record</div>
+                    ) : (
+                      <div className="text-white/70">Voice not supported</div>
                     )}
-                    <p className="text-sm leading-relaxed">{msg.message}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                
+                {/* Voice Settings */}
+                <div className="mt-4 text-center">
+                  <div className="flex items-center justify-center gap-4 mb-2">
+                    <button 
+                      onClick={toggleVoice}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                        voiceEnabled 
+                          ? 'bg-green-600 hover:bg-green-700 text-white' 
+                          : 'bg-gray-600 hover:bg-gray-700 text-white'
+                      }`}
+                    >
+                      {voiceEnabled ? '🔊 On' : '🔇 Off'}
+                    </button>
+                  </div>
+                  
+                  <div className="inline-flex items-center bg-black/80 rounded-full border border-white/20">
+                    <select
+                      value={selectedVoice}
+                      onChange={(e) => setSelectedVoice(e.target.value)}
+                      className="bg-transparent text-white text-xs px-3 py-1 rounded-full focus:outline-none focus:border-orange-400 appearance-none cursor-pointer"
+                      style={{minWidth: '120px'}}
+                    >
+                      <option value="nova">Nova (Warm & Calm)</option>
+                      <option value="alloy">Alloy (Neutral)</option>
+                      <option value="echo">Echo (Clear)</option>
+                      <option value="fable">Fable (Expressive)</option>
+                      <option value="onyx">Onyx (Deep)</option>
+                      <option value="shimmer">Shimmer (Bright)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
 
-            <div className="p-6 border-t border-white/30">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-3">
+              {/* Divider */}
+              <div className="border-t border-white/20 my-8"></div>
+
+              {/* Text Input */}
+              <div>
+                <div className="text-center mb-4">
+                  <div className="text-white/80 font-medium mb-2">💬 Text Option</div>
+                  <div className="text-white/60 text-sm">Type your response instead</div>
+                </div>
+                
+                <div className="space-y-3">
+                  <textarea
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder="Type your response here... (Press Enter to send)"
+                    className="w-full bg-black/80 border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/50 resize-none focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 min-h-[100px] max-h-[200px]"
+                    rows="4"
+                    disabled={isRecording}
+                  />
+                  
                   <button
-                    onClick={toggleVoice}
-                    className={`p-2 rounded-lg transition-all ${
-                      voiceEnabled 
-                        ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
-                        : 'bg-gray-600/50 text-white/70 hover:bg-gray-600/70'
-                    }`}
-                    title={voiceEnabled ? 'Voice enabled' : 'Voice disabled'}
+                    onClick={sendMessage}
+                    disabled={!chatInput.trim() || isRecording}
+                    className="w-full bg-gradient-to-br from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
                   >
-                    {voiceEnabled ? '🔊' : '🔇'}
+                    {isRecording ? '📢 Voice Active' : '💬 Send Message'}
                   </button>
                   
-                  {voiceEnabled && (
-                    <span className="text-xs text-white/70">
-                      {isAISpeaking ? '🎙️ AI speaking...' : 'Voice enabled'}
-                    </span>
+                  {chatInput && !isRecording && (
+                    <div className="text-center text-white/60 text-xs">
+                      Press Enter to send, or Shift+Enter for new line
+                    </div>
                   )}
                 </div>
-                
               </div>
+              
+              {/* Live Transcript Preview */}
+              {chatInput && isRecording && (
+                <div className="mt-4 bg-orange-900/30 backdrop-blur-sm rounded-xl p-3 border border-orange-700/30">
+                  <div className="text-orange-300 text-xs font-medium mb-1">🎤 Live transcript:</div>
+                  <div className="text-white text-sm italic">"{chatInput}"</div>
+                </div>
+              )}
+            </div>
 
-
-
-              {/* Big Record Button Interface */}
-              <div className="flex flex-col items-center gap-4">
-                {speechRecognition ? (
-                  <button
-                    onClick={isRecording ? stopRecording : startRecording}
-                    className={`w-32 h-32 rounded-full transition-all duration-300 flex flex-col items-center justify-center text-white font-bold text-lg shadow-2xl transform hover:scale-105 ${
-                      isRecording 
-                        ? 'bg-gradient-to-br from-orange-600 to-yellow-600 animate-pulse shadow-orange-500/50 border-4 border-orange-300' 
-                        : 'bg-gradient-to-br from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 shadow-orange-500/30'
-                    }`}
-                  >
-                    {isRecording ? (
-                      <>
-                        <div className="text-4xl mb-2">⏹️</div>
-                        <div className="text-sm">Stop Recording</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-4xl mb-2">🎤</div>
-                        <div className="text-sm">Start Recording</div>
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <div className="w-32 h-32 rounded-full bg-black/80 border-2 border-white/30 flex flex-col items-center justify-center text-white/70">
-                    <div className="text-4xl mb-2">🚫</div>
-                    <div className="text-xs text-center">Voice Not Supported</div>
-                  </div>
-                )}
-                
-                <div className="text-center">
-                  {isRecording ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce"></div>
-                        <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            {/* Right Side: Chat Messages */}
+            <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold text-white mb-6 text-center">Conversation</h2>
+              
+              <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
+                {chatMessages.map((msg, index) => (
+                  <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-sm px-4 py-3 rounded-2xl ${
+                      msg.type === 'user' 
+                        ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white' 
+                        : 'bg-white/10 text-white border border-white/20'
+                    }`}>
+                      {msg.type === 'therapist' && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">🤖</span>
+                          <span className="text-xs text-white/80 font-medium">Your Financial Therapist</span>
+                          {isAISpeaking && index === chatMessages.length - 1 && (
+                            <div className="flex items-center gap-1">
+                              <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse"></div>
+                              <div className="w-1 h-4 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                              <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-sm leading-relaxed">{msg.message}</div>
+                      <div className="text-xs opacity-70 mt-2">
+                        {msg.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </div>
-                      <div className="text-orange-400 font-medium">🎤 Listening... speak now</div>
-                      <div className="text-white/70 text-sm">Click the button again to stop</div>
                     </div>
-                  ) : speechRecognition ? (
-                    <div className="text-white/80">
-                      <div className="font-medium">Ready to record your response</div>
-                      <div className="text-sm text-white/70">Click the microphone to start</div>
-                    </div>
-                  ) : !speechRecognition ? (
-                    <div className="text-white/70">
-                      <div className="font-medium">Voice recording not supported in this browser</div>
-                      <div className="text-sm">Try Chrome, Edge, or Safari</div>
-                    </div>
-                  ) : (
-                    <div className="text-white/80">
-                      <div className="font-medium">Voice ready - click microphone to start</div>
-                      <div className="text-sm text-white/70">Your therapist will speak with {selectedVoice} voice</div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
+              
+              {chatMessages.length === 0 && (
+                <div className="text-center text-white/50 mt-12">
+                  <div className="text-4xl mb-4">💭</div>
+                  <div>Your conversation will appear here</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -898,8 +1408,27 @@ const FinancialTherapyPlatform = () => {
   const renderConversationResults = () => {
     const impact = calculateFinancialImpact();
     
+    console.log('🔍 Report rendering - personalizedInsights:', personalizedInsights);
+    console.log('🔍 Report rendering - conversationResponses:', conversationResponses);
+    
+    // Always ensure we have at least basic insights
+    const insights = personalizedInsights && personalizedInsights.length > 0 ? personalizedInsights : [
+      {
+        category: "📊 Your Conversation Summary",
+        title: "💬 Thank You for Sharing",
+        description: "You completed our financial therapy session and shared valuable insights about your relationship with money.",
+        deepInsight: "Every conversation about money is a step toward better financial wellness.",
+        actionItems: [
+          "Reflect on the questions you answered today",
+          "Identify one pattern you noticed about your money habits",
+          "Set a small financial goal for the week ahead"
+        ]
+      }
+    ];
+    
     return (
-      <div className="max-w-4xl mx-auto p-6 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black">
+        <div className="max-w-4xl mx-auto p-6 text-white">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
             🎯 Your Financial Therapy Results
@@ -918,18 +1447,18 @@ const FinancialTherapyPlatform = () => {
             
             <div className="space-y-4">
               <div className="bg-yellow-800/30 rounded-xl p-4">
-                <div className="text-yellow-300 font-medium mb-2">💖 What Makes You Happy:</div>
-                <div className="text-white italic">"{conversationResponses.intro || 'Your meaningful purchases'}"</div>
+                <div className="text-yellow-300 font-medium mb-2">💭 How You Feel About Money:</div>
+                <div className="text-white italic">"{conversationResponses.message_1 || 'Your honest feelings about your financial situation'}"</div>
               </div>
               
               <div className="bg-orange-800/30 rounded-xl p-4">
-                <div className="text-orange-300 font-medium mb-2">😰 What You Regret:</div>
-                <div className="text-white italic">"{conversationResponses.guilt_spending || 'Impulse purchases'}"</div>
+                <div className="text-orange-300 font-medium mb-2">💖 What Brings You Joy:</div>
+                <div className="text-white italic">"{conversationResponses.message_2 || 'Decisions that made you feel good'}"</div>
               </div>
               
               <div className="bg-orange-800/30 rounded-xl p-4">
-                <div className="text-orange-300 font-medium mb-2">🌟 Your Ideal Weekend:</div>
-                <div className="text-white italic text-sm">"{conversationResponses.ideal_weekend || 'Quality time and experiences'}"</div>
+                <div className="text-orange-300 font-medium mb-2">🎯 Your Goals:</div>
+                <div className="text-white italic text-sm">"{conversationResponses.message_3 || 'What you want to change about your financial life'}"</div>
               </div>
             </div>
           </div>
@@ -959,7 +1488,7 @@ const FinancialTherapyPlatform = () => {
           </div>
         </div>
 
-        {personalizedInsights.length > 0 && (
+        {insights.length > 0 && (
           <div className="mb-12">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-4 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
@@ -969,7 +1498,7 @@ const FinancialTherapyPlatform = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {personalizedInsights.map((insight, index) => (
+              {insights.map((insight, index) => (
                 <div
                   key={index}
                   className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-white/30/30"
@@ -1061,6 +1590,7 @@ const FinancialTherapyPlatform = () => {
               Start Fresh Session 🔄
             </button>
           </div>
+        </div>
         </div>
       </div>
     );
@@ -2269,79 +2799,126 @@ const FinancialTherapyPlatform = () => {
   );
 
   // What If Scenarios Page
-  const renderScenariosPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-            🤔 What If Scenarios
-          </h1>
-          <p className="text-xl text-white/80">
-            Explore life possibilities and understand their financial impact
-          </p>
-        </div>
+  // Scenario calculation functions
+  const calculateMoveOutScenario = (inputs) => {
+    const rent = parseFloat(inputs.rent) || 0;
+    const utilities = parseFloat(inputs.utilities) || 150;
+    const groceries = parseFloat(inputs.groceries) || 400;
+    const transport = parseFloat(inputs.transport) || 200;
+    const misc = parseFloat(inputs.misc) || 300;
+    const income = parseFloat(inputs.income) || 0;
+    
+    const totalExpenses = rent + utilities + groceries + transport + misc;
+    const leftover = income - totalExpenses;
+    const affordability = (totalExpenses / income) * 100;
+    
+    return {
+      totalExpenses,
+      leftover,
+      affordability,
+      canAfford: affordability <= 70, // 70% rule
+      recommendation: affordability <= 50 ? "Great choice! Very affordable." :
+                     affordability <= 70 ? "Doable, but budget carefully." :
+                     "Consider waiting or finding cheaper options."
+    };
+  };
 
-        {/* Popular Scenarios */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
-            <div className="text-4xl mb-4">🏠</div>
-            <h3 className="text-xl font-bold text-white mb-2">Can I Move Out?</h3>
-            <p className="text-white/80 text-sm mb-4">Calculate if you can afford your own place based on rent, utilities, and lifestyle</p>
-            <div className="flex items-center justify-between">
-              <span className="text-yellow-400 text-sm">✓ Most Popular</span>
-              <button className="text-orange-400 hover:text-orange-300">Try It →</button>
-            </div>
+  const renderScenariosPage = () => {
+    if (selectedScenario) {
+      return renderSelectedScenario();
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+              🤔 What If Scenarios
+            </h1>
+            <p className="text-xl text-white/80">
+              Interactive calculators to explore life possibilities
+            </p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-yellow-500/50 transition-all cursor-pointer">
-            <div className="text-4xl mb-4">🚗</div>
-            <h3 className="text-xl font-bold text-white mb-2">Should I Buy a Car?</h3>
-            <p className="text-white/80 text-sm mb-4">Compare buying vs leasing vs rideshare for your specific situation</p>
-            <div className="flex items-center justify-between">
-              <span className="text-yellow-400 text-sm">⭐ Trending</span>
-              <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
+          {/* Popular Scenarios */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div 
+              onClick={() => setSelectedScenario('moveOut')}
+              className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="text-4xl mb-4">🏠</div>
+              <h3 className="text-xl font-bold text-white mb-2">Can I Move Out?</h3>
+              <p className="text-white/80 text-sm mb-4">Calculate if you can afford your own place based on rent, utilities, and lifestyle</p>
+              <div className="flex items-center justify-between">
+                <span className="text-yellow-400 text-sm">✓ Most Popular</span>
+                <button className="text-orange-400 hover:text-orange-300">Try It →</button>
+              </div>
             </div>
-          </div>
 
-          <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
-            <div className="text-4xl mb-4">✈️</div>
-            <h3 className="text-xl font-bold text-white mb-2">Can I Afford This Trip?</h3>
-            <p className="text-white/80 text-sm mb-4">Plan your dream vacation without breaking your budget</p>
-            <div className="flex items-center justify-between">
-              <span className="text-orange-400 text-sm">🔥 Hot</span>
-              <button className="text-orange-400 hover:text-orange-300">Try It →</button>
+            <div 
+              onClick={() => setSelectedScenario('buyCar')}
+              className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-yellow-500/50 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="text-4xl mb-4">🚗</div>
+              <h3 className="text-xl font-bold text-white mb-2">Should I Buy a Car?</h3>
+              <p className="text-white/80 text-sm mb-4">Compare buying vs leasing vs rideshare for your specific situation</p>
+              <div className="flex items-center justify-between">
+                <span className="text-yellow-400 text-sm">⭐ Trending</span>
+                <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
+              </div>
             </div>
-          </div>
 
-          <div className="bg-gradient-to-br from-orange-900/50 to-yellow-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
-            <div className="text-4xl mb-4">🎓</div>
-            <h3 className="text-xl font-bold text-white mb-2">Should I Go Back to School?</h3>
-            <p className="text-white/80 text-sm mb-4">ROI analysis of education vs current earning potential</p>
-            <div className="flex items-center justify-between">
-              <span className="text-white/70 text-sm">💭 Life Changer</span>
-              <button className="text-orange-400 hover:text-orange-300">Try It →</button>
+            <div 
+              onClick={() => setSelectedScenario('vacation')}
+              className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="text-4xl mb-4">✈️</div>
+              <h3 className="text-xl font-bold text-white mb-2">Can I Afford This Trip?</h3>
+              <p className="text-white/80 text-sm mb-4">Plan your dream vacation without breaking your budget</p>
+              <div className="flex items-center justify-between">
+                <span className="text-orange-400 text-sm">🔥 Hot</span>
+                <button className="text-orange-400 hover:text-orange-300">Try It →</button>
+              </div>
             </div>
-          </div>
 
-          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-orange-500/50 transition-all cursor-pointer">
-            <div className="text-4xl mb-4">💍</div>
-            <h3 className="text-xl font-bold text-white mb-2">Can I Afford to Get Married?</h3>
-            <p className="text-white/80 text-sm mb-4">Wedding costs, combined finances, and lifestyle changes</p>
-            <div className="flex items-center justify-between">
-              <span className="text-orange-400 text-sm">💕 Relationship</span>
-              <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
+            <div 
+              onClick={() => setSelectedScenario('backToSchool')}
+              className="bg-gradient-to-br from-orange-900/50 to-yellow-900/50 rounded-2xl p-6 border border-orange-700/30 hover:border-orange-500/50 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="text-4xl mb-4">🎓</div>
+              <h3 className="text-xl font-bold text-white mb-2">Should I Go Back to School?</h3>
+              <p className="text-white/80 text-sm mb-4">ROI analysis of education vs current earning potential</p>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70 text-sm">💭 Life Changer</span>
+                <button className="text-orange-400 hover:text-orange-300">Try It →</button>
+              </div>
             </div>
-          </div>
 
-          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-yellow-500/50 transition-all cursor-pointer">
-            <div className="text-4xl mb-4">🏢</div>
-            <h3 className="text-xl font-bold text-white mb-2">Should I Quit My Job?</h3>
-            <p className="text-white/80 text-sm mb-4">Financial runway for career changes and entrepreneurship</p>
-            <div className="flex items-center justify-between">
-              <span className="text-orange-400 text-sm">⚡ Bold Move</span>
-              <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
+            <div 
+              onClick={() => setSelectedScenario('getMarried')}
+              className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-orange-500/50 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="text-4xl mb-4">💍</div>
+              <h3 className="text-xl font-bold text-white mb-2">Can I Afford to Get Married?</h3>
+              <p className="text-white/80 text-sm mb-4">Wedding costs, combined finances, and lifestyle changes</p>
+              <div className="flex items-center justify-between">
+                <span className="text-orange-400 text-sm">💕 Relationship</span>
+                <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
+              </div>
             </div>
-          </div>
+
+            <div 
+              onClick={() => setSelectedScenario('quitJob')}
+              className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-6 border border-yellow-700/30 hover:border-yellow-500/50 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="text-4xl mb-4">🏢</div>
+              <h3 className="text-xl font-bold text-white mb-2">Should I Quit My Job?</h3>
+              <p className="text-white/80 text-sm mb-4">Financial runway for career changes and entrepreneurship</p>
+              <div className="flex items-center justify-between">
+                <span className="text-orange-400 text-sm">⚡ Bold Move</span>
+                <button className="text-yellow-400 hover:text-yellow-300">Try It →</button>
+              </div>
+            </div>
         </div>
 
         {/* Custom Scenario Builder */}
@@ -2398,6 +2975,198 @@ const FinancialTherapyPlatform = () => {
       </div>
     </div>
   );
+  };
+
+  // Render individual scenario calculator
+  const renderSelectedScenario = () => {
+    const scenarios = {
+      moveOut: {
+        title: "🏠 Can I Move Out?",
+        description: "Calculate if you can afford your own place",
+        inputs: [
+          { key: 'income', label: 'Monthly Take-Home Income', type: 'number', placeholder: '3500' },
+          { key: 'rent', label: 'Monthly Rent', type: 'number', placeholder: '1200' },
+          { key: 'utilities', label: 'Utilities (Electric, Internet, etc.)', type: 'number', placeholder: '150' },
+          { key: 'groceries', label: 'Groceries & Food', type: 'number', placeholder: '400' },
+          { key: 'transport', label: 'Transportation', type: 'number', placeholder: '200' },
+          { key: 'misc', label: 'Other Expenses (Entertainment, etc.)', type: 'number', placeholder: '300' }
+        ]
+      },
+      vacation: {
+        title: "✈️ Can I Afford This Trip?",
+        description: "Plan your dream vacation within budget",
+        inputs: [
+          { key: 'income', label: 'Monthly Take-Home Income', type: 'number', placeholder: '3500' },
+          { key: 'tripCost', label: 'Total Trip Cost', type: 'number', placeholder: '2500' },
+          { key: 'timeframe', label: 'Months to Save', type: 'number', placeholder: '6' },
+          { key: 'currentSavings', label: 'Current Savings Available', type: 'number', placeholder: '500' },
+          { key: 'monthlyExpenses', label: 'Monthly Fixed Expenses', type: 'number', placeholder: '2800' }
+        ]
+      }
+    };
+
+    const currentScenario = scenarios[selectedScenario];
+    if (!currentScenario) return null;
+
+    const handleInputChange = (key, value) => {
+      setScenarioInputs(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    };
+
+    const calculateResult = () => {
+      if (selectedScenario === 'moveOut') {
+        return calculateMoveOutScenario(scenarioInputs);
+      } else if (selectedScenario === 'vacation') {
+        return calculateVacationScenario(scenarioInputs);
+      }
+      return null;
+    };
+
+    const result = calculateResult();
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <button 
+              onClick={() => {
+                setSelectedScenario(null);
+                setScenarioInputs({});
+              }}
+              className="text-orange-400 hover:text-orange-300 text-2xl"
+            >
+              ← Back
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold">{currentScenario.title}</h1>
+              <p className="text-white/80">{currentScenario.description}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Input Form */}
+            <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-6">Enter Your Information</h2>
+              <div className="space-y-4">
+                {currentScenario.inputs.map((input) => (
+                  <div key={input.key}>
+                    <label className="block text-white font-medium mb-2">{input.label}</label>
+                    <input
+                      type={input.type}
+                      placeholder={input.placeholder}
+                      value={scenarioInputs[input.key] || ''}
+                      onChange={(e) => handleInputChange(input.key, e.target.value)}
+                      className="w-full bg-black/80 border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Results */}
+            <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-6">Your Results</h2>
+              {result ? (
+                <div className="space-y-4">
+                  {selectedScenario === 'moveOut' && (
+                    <>
+                      <div className="bg-gradient-to-r from-orange-900/30 to-yellow-900/30 rounded-xl p-4">
+                        <div className="text-2xl font-bold text-center mb-2">
+                          {result.canAfford ? '✅ You Can Afford It!' : '❌ Wait & Save More'}
+                        </div>
+                        <div className="text-center text-white/80">{result.recommendation}</div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                          <div className="text-2xl font-bold text-orange-400">${result.totalExpenses.toLocaleString()}</div>
+                          <div className="text-sm text-white/70">Total Monthly Expenses</div>
+                        </div>
+                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                          <div className={`text-2xl font-bold ${result.leftover >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            ${result.leftover.toLocaleString()}
+                          </div>
+                          <div className="text-sm text-white/70">Monthly Leftover</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/10 rounded-xl p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span>Budget Usage</span>
+                          <span className={`font-bold ${result.affordability <= 70 ? 'text-green-400' : 'text-red-400'}`}>
+                            {result.affordability.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full transition-all ${result.affordability <= 50 ? 'bg-green-400' : result.affordability <= 70 ? 'bg-yellow-400' : 'bg-red-400'}`}
+                            style={{ width: `${Math.min(result.affordability, 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-white/60 mt-2">Recommended: Under 70%</div>
+                      </div>
+                    </>
+                  )}
+                  
+                  {selectedScenario === 'vacation' && result && (
+                    <>
+                      <div className="bg-gradient-to-r from-orange-900/30 to-yellow-900/30 rounded-xl p-4">
+                        <div className="text-2xl font-bold text-center mb-2">
+                          {result.canAfford ? '✈️ Trip is Doable!' : '💸 Need More Time/Money'}
+                        </div>
+                        <div className="text-center text-white/80">{result.recommendation}</div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                          <div className="text-2xl font-bold text-orange-400">${result.monthlyNeeded.toLocaleString()}</div>
+                          <div className="text-sm text-white/70">Monthly Savings Needed</div>
+                        </div>
+                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                          <div className="text-2xl font-bold text-green-400">${result.totalAvailable.toLocaleString()}</div>
+                          <div className="text-sm text-white/70">Total Available</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-white/60 py-8">
+                  Fill out the form to see your results
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Additional calculation functions
+  const calculateVacationScenario = (inputs) => {
+    const income = parseFloat(inputs.income) || 0;
+    const tripCost = parseFloat(inputs.tripCost) || 0;
+    const timeframe = parseFloat(inputs.timeframe) || 1;
+    const currentSavings = parseFloat(inputs.currentSavings) || 0;
+    const monthlyExpenses = parseFloat(inputs.monthlyExpenses) || 0;
+
+    const monthlyLeftover = income - monthlyExpenses;
+    const totalNeeded = tripCost - currentSavings;
+    const monthlyNeeded = totalNeeded / timeframe;
+    const totalAvailable = currentSavings + (monthlyLeftover * timeframe);
+    
+    return {
+      monthlyNeeded,
+      totalAvailable,
+      canAfford: totalAvailable >= tripCost,
+      recommendation: totalAvailable >= tripCost ? 
+        "You can afford this trip with your current savings plan!" :
+        `You need to save $${Math.ceil((tripCost - totalAvailable) / timeframe)} more per month or extend your timeline.`
+    };
+  };
 
   // About Page
   const renderAboutPage = () => (

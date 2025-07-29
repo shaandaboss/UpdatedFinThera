@@ -27,6 +27,7 @@ const FinancialTherapyPlatform = () => {
   // Scenarios page state
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [scenarioInputs, setScenarioInputs] = useState({});
+  const [selectedLearnTopic, setSelectedLearnTopic] = useState(null);
   const recognitionRef = useRef(null);
   const currentAudioRef = useRef(null);
   const currentTranscriptRef = useRef('');
@@ -1148,6 +1149,80 @@ const FinancialTherapyPlatform = () => {
           </button>
         </div>
 
+        {/* Step-by-Step Journey */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              <span className="bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">Your Journey</span>
+            </h2>
+            <p className="text-xl text-white/80">Here's exactly what happens, step by step</p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="relative">
+              {/* Connection line */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-400 to-yellow-400 transform -translate-x-1/2 hidden md:block"></div>
+              
+              <div className="space-y-12">
+                {[
+                  {
+                    step: 1,
+                    icon: "🎙️",
+                    title: "Start Your Conversation",
+                    description: "Click the button and start talking naturally. I'll ask thoughtful questions about your relationship with money - no judgment, just understanding.",
+                    duration: "5 minutes"
+                  },
+                  {
+                    step: 2,
+                    icon: "🧠",
+                    title: "I Analyze Your Patterns",
+                    description: "While we talk, I'm identifying your financial personality, money beliefs, and spending patterns. I discover what makes you feel secure vs. anxious about money.",
+                    duration: "Real-time"
+                  },
+                  {
+                    step: 3,
+                    icon: "📊",
+                    title: "Get Your Personal Report",
+                    description: "Receive deep insights about your financial psychology, personalized recommendations, and see how small changes could impact your future wealth.",
+                    duration: "Instant"
+                  },
+                  {
+                    step: 4,
+                    icon: "🎯",
+                    title: "Take Action with Tools",
+                    description: "Use our What-If scenarios, learn from our finance guides, track your progress, and build the financial life you want with confidence.",
+                    duration: "Ongoing"
+                  }
+                ].map((item, index) => (
+                  <div key={index} className="relative flex items-center">
+                    {/* Step indicator */}
+                    <div className="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center font-bold text-black text-lg z-10 hidden md:flex">
+                      {item.step}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className={`w-full md:w-5/12 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8 md:ml-auto'}`}>
+                      <div className={`bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 ${index % 2 === 0 ? 'md:text-right' : ''}`}>
+                        <div className={`flex items-center gap-3 mb-4 ${index % 2 === 0 ? 'md:justify-end' : ''}`}>
+                          <div className="text-3xl">{item.icon}</div>
+                          <div className="md:hidden w-8 h-8 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center font-bold text-black text-sm">
+                            {item.step}
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                        <p className="text-white/80 mb-3">{item.description}</p>
+                        <div className="inline-flex items-center px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-sm font-medium">
+                          {item.duration}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
@@ -1501,7 +1576,7 @@ const FinancialTherapyPlatform = () => {
               {insights.map((insight, index) => (
                 <div
                   key={index}
-                  className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-white/30/30"
+                  className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-white/30"
                 >
                   <div className="mb-6">
                     <div className="text-sm text-yellow-400 font-medium mb-2">{insight.category}</div>
@@ -1523,7 +1598,7 @@ const FinancialTherapyPlatform = () => {
                         {insight.actionItems.map((action, actionIndex) => (
                           <div
                             key={actionIndex}
-                            className="flex items-start gap-3 text-sm text-white/80 bg-black/80/30 rounded-lg p-3"
+                            className="flex items-start gap-3 text-sm text-white/80 bg-black/30 rounded-lg p-3"
                           >
                             <div className="text-yellow-400 mt-0.5">•</div>
                             <div>{action}</div>
@@ -1546,7 +1621,7 @@ const FinancialTherapyPlatform = () => {
           </p>
         </div>
 
-        <div className="bg-black/90/50 backdrop-blur-sm rounded-3xl p-8 border border-white/20 text-center">
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-8 border border-white/20 text-center">
           <h3 className="text-2xl font-bold text-white mb-6">🎯 Your Next Steps</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -2597,8 +2672,160 @@ const FinancialTherapyPlatform = () => {
     </div>
   );
 
+  // Learn Content Pages
+  const renderLearnContent = () => {
+    const topics = {
+      investing: {
+        title: "📈 Investment Basics",
+        subtitle: "Your Guide to Growing Wealth",
+        content: [
+          {
+            section: "What is Investing?",
+            text: "Investing is putting your money to work to generate more money over time. Instead of letting your savings sit in a low-interest account, you can invest in assets that have the potential to grow in value."
+          },
+          {
+            section: "Types of Investments",
+            text: "Stocks represent ownership in companies. Bonds are loans to governments or corporations. Index funds spread your risk across many stocks. ETFs are like index funds but trade like stocks. Real estate can provide rental income and appreciation."
+          },
+          {
+            section: "The Power of Compound Interest",
+            text: "Albert Einstein allegedly called compound interest the eighth wonder of the world. When you invest $1,000 and earn 7% annually, you don't just earn $70 each year forever. In year two, you earn 7% on $1,070, then 7% on $1,144.90, and so on. Over 30 years, that $1,000 becomes over $7,600."
+          },
+          {
+            section: "Getting Started",
+            text: "Start with low-cost index funds through apps like Vanguard, Fidelity, or Charles Schwab. Many have no minimum investment. Consider target-date funds that automatically adjust as you age. The most important step is starting - even $25/month can grow significantly over time."
+          },
+          {
+            section: "Common Mistakes to Avoid",
+            text: "Don't try to time the market - even experts can't predict short-term moves. Avoid putting all your money in one stock or sector. Don't panic sell during market downturns. Don't chase last year's hot investment. Stay consistent with regular contributions."
+          }
+        ]
+      },
+      budgeting: {
+        title: "💰 Budgeting 101",
+        subtitle: "Creating a Budget That Actually Works",
+        content: [
+          {
+            section: "Why Budgeting Matters",
+            text: "A budget isn't about restriction - it's about giving every dollar a purpose before you spend it. It helps you avoid living paycheck to paycheck and creates space for both your needs and wants."
+          },
+          {
+            section: "The 50/30/20 Rule",
+            text: "Allocate 50% of after-tax income to needs (rent, groceries, utilities), 30% to wants (dining out, entertainment, hobbies), and 20% to savings and debt repayment. This is a starting point - adjust based on your situation."
+          },
+          {
+            section: "Track Your Spending",
+            text: "For one month, write down every expense. Use apps like Mint, YNAB, or simply a notes app. You'll be surprised where your money actually goes. Most people underestimate their spending by 20-30%."
+          },
+          {
+            section: "Zero-Based Budgeting",
+            text: "Give every dollar a job before the month begins. Income minus expenses should equal zero. If you have money left over, assign it to savings, debt payment, or a specific goal rather than letting it disappear into miscellaneous spending."
+          },
+          {
+            section: "Making It Stick",
+            text: "Automate savings and bill payments. Use cash or debit for discretionary spending to avoid overspending. Review and adjust monthly - your budget should evolve with your life. Celebrate small wins when you stick to your plan."
+          }
+        ]
+      },
+      emergency: {
+        title: "🛟 Emergency Fund",
+        subtitle: "Building Your Financial Safety Net",
+        content: [
+          {
+            section: "Why You Need an Emergency Fund",
+            text: "Life happens - car repairs, medical bills, job loss, home maintenance. Without an emergency fund, these unexpected expenses force you into debt or derail your financial progress. An emergency fund provides peace of mind and financial stability."
+          },
+          {
+            section: "How Much to Save",
+            text: "Start with $1,000 as your initial goal - this covers most minor emergencies. Then build toward 3-6 months of expenses. If you spend $3,000/month, aim for $9,000-$18,000. Self-employed or commission-based workers should lean toward 6 months or more."
+          },
+          {
+            section: "Where to Keep It",
+            text: "Keep your emergency fund in a high-yield savings account that's separate from your checking account. You want it easily accessible but not so convenient that you're tempted to use it for non-emergencies. Online banks typically offer better rates."
+          },
+          {
+            section: "Building It Gradually",
+            text: "Start small - even $25 per paycheck adds up. Use windfalls like tax refunds, bonuses, or gifts. Sell items you no longer need. Consider a side hustle temporarily to boost the fund faster. Automate transfers so it happens without thinking."
+          },
+          {
+            section: "When to Use It",
+            text: "True emergencies: job loss, major medical expenses, essential home/car repairs, unexpected travel for family emergencies. NOT for: vacations, shopping sales, routine maintenance you should have planned for, or investments."
+          }
+        ]
+      }
+    };
+
+    const topic = topics[selectedLearnTopic];
+    if (!topic) return null;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6">
+            <button
+              onClick={() => setSelectedLearnTopic(null)}
+              className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors mb-4"
+            >
+              ← Back to Learn Topics
+            </button>
+            
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                {topic.title}
+              </h1>
+              <p className="text-xl text-white/80">
+                {topic.subtitle}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            {topic.content.map((section, index) => (
+              <div key={index} className="bg-black/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                <h2 className="text-2xl font-bold text-orange-400 mb-4">{section.section}</h2>
+                <p className="text-white/80 leading-relaxed text-lg">{section.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 bg-gradient-to-r from-orange-900/50 to-yellow-900/50 backdrop-blur-sm rounded-2xl p-8 border border-orange-500/30 text-center">
+            <h3 className="text-2xl font-bold text-white mb-4">Ready to Take Action?</h3>
+            <p className="text-white/80 mb-6">Apply what you've learned with our personalized tools and planning features.</p>
+            
+            <div className="flex gap-4 justify-center flex-wrap">
+              <button
+                onClick={() => {
+                  setSelectedLearnTopic(null);
+                  setCurrentPage('scenarios');
+                }}
+                className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all"
+              >
+                Try What-If Scenarios
+              </button>
+              
+              <button
+                onClick={() => {
+                  setSelectedLearnTopic(null);
+                  setCurrentPage('conversation');
+                }}
+                className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all"
+              >
+                Start Financial Therapy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Learn Page
-  const renderLearnPage = () => (
+  const renderLearnPage = () => {
+    if (selectedLearnTopic) {
+      return renderLearnContent();
+    }
+
+    return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
@@ -2612,74 +2839,84 @@ const FinancialTherapyPlatform = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Investment Basics */}
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div 
+            onClick={() => setSelectedLearnTopic('investing')}
+            className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-orange-400/50 transition-all cursor-pointer group"
+          >
             <div className="text-3xl mb-4">📈</div>
-            <h3 className="text-xl font-bold text-white mb-2">Investment Basics</h3>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">Investment Basics</h3>
             <p className="text-white/70 mb-4">Learn the fundamentals of growing your wealth</p>
             <div className="flex items-center justify-between">
               <span className="text-sm text-yellow-400">5 min read</span>
-              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
+              <span className="text-yellow-400 hover:text-yellow-300 font-medium group-hover:translate-x-1 transition-transform">Start →</span>
             </div>
           </div>
 
           {/* Budgeting 101 */}
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div 
+            onClick={() => setSelectedLearnTopic('budgeting')}
+            className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-orange-400/50 transition-all cursor-pointer group"
+          >
             <div className="text-3xl mb-4">💰</div>
-            <h3 className="text-xl font-bold text-white mb-2">Budgeting 101</h3>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">Budgeting 101</h3>
             <p className="text-white/70 mb-4">Create a budget that actually works for you</p>
             <div className="flex items-center justify-between">
               <span className="text-sm text-yellow-400">7 min read</span>
-              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
+              <span className="text-yellow-400 hover:text-yellow-300 font-medium group-hover:translate-x-1 transition-transform">Start →</span>
             </div>
           </div>
 
           {/* Emergency Fund */}
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div 
+            onClick={() => setSelectedLearnTopic('emergency')}
+            className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-orange-400/50 transition-all cursor-pointer group"
+          >
             <div className="text-3xl mb-4">🛟</div>
-            <h3 className="text-xl font-bold text-white mb-2">Emergency Fund</h3>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">Emergency Fund</h3>
             <p className="text-white/70 mb-4">Build your financial safety net</p>
             <div className="flex items-center justify-between">
               <span className="text-sm text-yellow-400">4 min read</span>
-              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
+              <span className="text-yellow-400 hover:text-yellow-300 font-medium group-hover:translate-x-1 transition-transform">Start →</span>
             </div>
           </div>
 
           {/* Debt Management */}
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 opacity-60">
             <div className="text-3xl mb-4">💳</div>
             <h3 className="text-xl font-bold text-white mb-2">Debt Management</h3>
             <p className="text-white/70 mb-4">Smart strategies to pay off debt faster</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">6 min read</span>
-              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">Coming Soon</span>
+              <span className="text-gray-500 font-medium">Start →</span>
             </div>
           </div>
 
           {/* Retirement Planning */}
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 opacity-60">
             <div className="text-3xl mb-4">🏖️</div>
             <h3 className="text-xl font-bold text-white mb-2">Retirement Planning</h3>
             <p className="text-white/70 mb-4">Secure your future with smart planning</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">8 min read</span>
-              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">Coming Soon</span>
+              <span className="text-gray-500 font-medium">Start →</span>
             </div>
           </div>
 
           {/* Financial Psychology */}
-          <div className="bg-black/90/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 opacity-60">
             <div className="text-3xl mb-4">🧠</div>
             <h3 className="text-xl font-bold text-white mb-2">Money Psychology</h3>
             <p className="text-white/70 mb-4">Understand your relationship with money</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">10 min read</span>
-              <button className="text-yellow-400 hover:text-yellow-300 font-medium">Start →</button>
+              <span className="text-sm text-yellow-400">Coming Soon</span>
+              <span className="text-gray-500 font-medium">Start →</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   // Optimization Page
   const renderOptimizationPage = () => (

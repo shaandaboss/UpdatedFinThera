@@ -22,7 +22,7 @@ const FinancialTherapyPlatform = () => {
   const [speechRecognition, setSpeechRecognition] = useState(null);
   const [voiceProvider, setVoiceProvider] = useState('openai');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
-  const [selectedVoice, setSelectedVoice] = useState('alloy');
+  const [selectedVoice, setSelectedVoice] = useState('nova');
   
   // Scenarios page state
   const [selectedScenario, setSelectedScenario] = useState(null);
@@ -233,6 +233,7 @@ const FinancialTherapyPlatform = () => {
     if (voiceEnabled && chatMessages.length > 0) {
       const lastMessage = chatMessages[chatMessages.length - 1];
       if (lastMessage.type === 'therapist') {
+        console.log('🎤 Auto-speaking therapist message:', lastMessage.message.substring(0, 50) + '...');
         speakMessage(lastMessage.message);
       }
     }
@@ -264,7 +265,17 @@ const FinancialTherapyPlatform = () => {
   };
 
   const speakMessage = async (text) => {
-    if (!voiceEnabled) return;
+    if (!voiceEnabled) {
+      console.log('🔇 Voice disabled, skipping speech');
+      return;
+    }
+    
+    if (!apiKey) {
+      console.warn('🔇 No API key available for voice synthesis');
+      return;
+    }
+    
+    console.log('🎤 Speaking message with voice:', selectedVoice, 'API key length:', apiKey?.length);
     
     // Stop any current audio
     if (currentAudioRef.current) {
@@ -274,17 +285,21 @@ const FinancialTherapyPlatform = () => {
     voiceService.stop();
     
     try {
-      // Initialize voice service with API key if available
-      if (apiKey) {
-        voiceService.initialize({ openaiApiKey: apiKey });
-      }
+      // Ensure voice service is initialized with current API key
+      voiceService.initialize({ openaiApiKey: apiKey });
       
       const audio = await voiceService.speak(
         text,
-        () => setIsAISpeaking(true),  // onStart
-        () => setIsAISpeaking(false), // onEnd
+        () => {
+          console.log('🎤 Voice started speaking');
+          setIsAISpeaking(true);
+        },  // onStart
+        () => {
+          console.log('🎤 Voice finished speaking');
+          setIsAISpeaking(false);
+        }, // onEnd
         (error) => {                  // onError
-          console.error('Voice synthesis error:', error);
+          console.error('❌ Voice synthesis error:', error);
           setIsAISpeaking(false);
         },
         selectedVoice // Pass the selected voice
@@ -292,7 +307,7 @@ const FinancialTherapyPlatform = () => {
       
       currentAudioRef.current = audio;
     } catch (error) {
-      console.error('Speech synthesis failed:', error);
+      console.error('❌ Speech synthesis failed:', error);
       setIsAISpeaking(false);
     }
   };
@@ -1545,11 +1560,11 @@ const FinancialTherapyPlatform = () => {
                   className="bg-transparent text-white text-xs px-3 py-1 rounded-full focus:outline-none focus:border-orange-400 appearance-none cursor-pointer"
                   style={{minWidth: '120px'}}
                 >
-                  <option value="alloy" className="bg-black text-white">Alloy</option>
-                  <option value="echo" className="bg-black text-white">Echo</option>
-                  <option value="fable" className="bg-black text-white">Fable</option>
-                  <option value="onyx" className="bg-black text-white">Onyx</option>
-                  <option value="nova" className="bg-black text-white">Nova</option>
+                  <option value="nova" className="bg-black text-white">Nova (Warm)</option>
+                  <option value="alloy" className="bg-black text-white">Alloy (Neutral)</option>
+                  <option value="echo" className="bg-black text-white">Echo (Clear)</option>
+                  <option value="fable" className="bg-black text-white">Fable (Expressive)</option>
+                  <option value="onyx" className="bg-black text-white">Onyx (Deep)</option>
                   <option value="shimmer" className="bg-black text-white">Shimmer</option>
                 </select>
               </div>
@@ -1631,12 +1646,12 @@ const FinancialTherapyPlatform = () => {
                       className="bg-transparent text-white text-xs px-3 py-1 rounded-full focus:outline-none focus:border-orange-400 appearance-none cursor-pointer"
                       style={{minWidth: '120px'}}
                     >
-                      <option value="nova">Nova (Warm & Calm)</option>
-                      <option value="alloy">Alloy (Neutral)</option>
-                      <option value="echo">Echo (Clear)</option>
-                      <option value="fable">Fable (Expressive)</option>
-                      <option value="onyx">Onyx (Deep)</option>
-                      <option value="shimmer">Shimmer (Bright)</option>
+                      <option value="nova" className="bg-black text-white">Nova (Warm)</option>
+                      <option value="alloy" className="bg-black text-white">Alloy (Neutral)</option>
+                      <option value="echo" className="bg-black text-white">Echo (Clear)</option>
+                      <option value="fable" className="bg-black text-white">Fable (Expressive)</option>
+                      <option value="onyx" className="bg-black text-white">Onyx (Deep)</option>
+                      <option value="shimmer" className="bg-black text-white">Shimmer (Upbeat)</option>
                     </select>
                   </div>
                 </div>

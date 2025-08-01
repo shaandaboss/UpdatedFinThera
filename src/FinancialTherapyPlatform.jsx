@@ -405,15 +405,19 @@ const FinancialTherapyPlatform = () => {
     
     // Second exchange - respond to their previous answer and continue the conversation
     else if (messageCount === 2) {
-      // Build on their first response
-      if (response.includes('tight') || response.includes('body') || response.includes('chest') || response.includes('brain')) {
-        conversationFlow = `Yes, exactly! What usually helps you feel more grounded when that physical stress hits?`;
-      } else if (response.includes('don\'t know') || response.includes('different') || response.includes('unclear')) {
-        conversationFlow = `That's such an honest answer. When you're making small money decisions - like coffee or online purchases - do you overthink them or decide quickly and then second-guess?`;
-      } else if (response.includes('sleep') || response.includes('control') || response.includes('decisions')) {
-        conversationFlow = `That sense of control is so valuable. Do you ever worry about messing up what you've got figured out?`;
+      // Build on their specific response with natural follow-ups
+      if (response.includes('making more money') || response.includes('more income') || response.includes('earn more')) {
+        conversationFlow = `That drive to earn more is so relatable. What does your ideal income situation look like - like, what would feel like "enough"?`;
+      } else if (response.includes('investing') || response.includes('invest') || response.includes('stocks') || response.includes('returns')) {
+        conversationFlow = `Love that you're thinking about investing! What's your dream scenario - like, what would you do if your investments really took off?`;
+      } else if (response.includes('control') || response.includes('manage') || response.includes('track') || response.includes('budget')) {
+        conversationFlow = `That control piece is huge. Picture your ideal day when money feels totally manageable - what does that look like?`;
+      } else if (response.includes('expenses') || response.includes('spending') || response.includes('bills') || response.includes('costs')) {
+        conversationFlow = `Yeah, expenses can feel overwhelming. If money wasn't a concern, what's the first thing you'd spend on without guilt?`;
+      } else if (response.includes('future') || response.includes('security') || response.includes('stable') || response.includes('retirement')) {
+        conversationFlow = `That future planning mindset is smart. What's your ideal life at 35 going to look like?`;
       } else {
-        conversationFlow = `I can hear there's more to this story. Tell me about a recent money decision you felt really good about - what made it feel right?`;
+        conversationFlow = `I can hear the ambition in what you're saying. Paint me a picture - what's your ideal lifestyle in 5 years?`;
       }
     }
     
@@ -422,13 +426,13 @@ const FinancialTherapyPlatform = () => {
       const contextualStart = generateContextualAcknowledgment(response);
       
       if (messageCount === 3) {
-        conversationFlow = `${contextualStart}Got it. What does 'financial freedom' actually mean to you personally?`;
+        conversationFlow = `${contextualStart}I love that vision! What would your perfect week look like if money was never a stress?`;
       } else if (messageCount === 4) {
-        conversationFlow = `${contextualStart}That's really insightful. How did your family talk about money when you were growing up?`;
+        conversationFlow = `${contextualStart}That sounds amazing. What's one thing you'd splurge on if you hit your money goals?`;
       } else if (messageCount === 5) {
-        conversationFlow = `${contextualStart}Those family patterns really stick with us. Tell me about a money decision you regret - what led to it?`;
+        conversationFlow = `${contextualStart}Nice! What's holding you back from that life right now - is it income, expenses, or something else?`;
       } else {
-        conversationFlow = `${contextualStart}Thanks for being so honest. If you could change one small money habit, what would make the biggest difference?`;
+        conversationFlow = `${contextualStart}Got it. If you could fix one money thing tomorrow to get closer to that dream, what would it be?`;
       }
     }
     

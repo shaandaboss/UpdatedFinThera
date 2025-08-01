@@ -419,21 +419,30 @@ const FinancialTherapyPlatform = () => {
       .map(([key, response]) => response)
       .join('\n\nUser: ');
     
-    const systemPrompt = `You are a warm, empathetic financial therapist talking to a young adult. Your goal is to understand their relationship with money through natural conversation.
+    const systemPrompt = `You are a warm, empathetic financial therapist talking to a young adult. Your goal is to understand their relationship with money through natural, flowing conversation that encourages deep sharing.
 
 Guidelines:
 - Keep responses to 1-2 sentences maximum
-- Ask ONE follow-up question that builds naturally on their response
-- Sound like a supportive friend who's genuinely curious
-- Focus on their goals, dreams, obstacles, and motivations
-- Be encouraging and non-judgmental
-- After 6-8 total exchanges, you'll wrap up for their personalized report
+- Ask ONE open-ended follow-up question that invites exploration and storytelling
+- Use question starters like "What's...", "How do you...", "Tell me about...", "Walk me through...", "What goes through your mind when..."
+- NEVER ask yes/no questions - always invite them to elaborate and explore their thoughts
+- Encourage stream-of-consciousness responses where they can ramble and share freely
+- Sound like a curious friend who wants to understand their inner world with money
+- Focus on feelings, dreams, obstacles, motivations, and what drives them
+- Let them share as much detail as they want - rich responses lead to better insights
+
+Question examples that work well:
+- "What goes through your mind when you think about your financial future?"
+- "Walk me through what your ideal financial life looks like."
+- "Tell me about what excites you most about money and what you could do with it."
+- "How do you feel when you imagine having complete financial freedom?"
+- "What's the story behind that feeling about money?"
 
 Previous conversation:
 User: ${conversationHistory}
 User: ${userResponse}
 
-Respond naturally as their financial therapist:`;
+Respond naturally as their financial therapist, encouraging them to open up:`;
 
     try {
       console.log('🤖 Making OpenAI API call...');
@@ -468,14 +477,14 @@ Respond naturally as their financial therapist:`;
       
     } catch (error) {
       console.error('🤖 AI API Error:', error);
-      // Fallback to ensure conversation continues
+      // Fallback to ensure conversation continues with open-ended questions
       const fallbackResponses = [
-        "That's really insightful. What would achieving that goal mean to you?",
-        "I can hear the passion in that. What's motivating you most right now?",
-        "That makes so much sense. What do you think is your biggest obstacle?",
-        "I love that vision! What would make the biggest difference in getting there?",
-        "That's such an honest perspective. What change would excite you most?",
-        "You're being so thoughtful about this. What drives you to improve your finances?"
+        "That's really insightful. Tell me more about what that goal represents to you.",
+        "I can hear the passion in that. What's the story behind what drives you with money?",
+        "That makes so much sense. Walk me through what's going through your mind about your financial situation.",
+        "I love that vision! What does your ideal financial life actually look like day-to-day?",
+        "That's such an honest perspective. How do you feel when you think about your financial future?",
+        "You're being so thoughtful about this. What excites you most about getting your finances on track?"
       ];
       return fallbackResponses[Math.min(messageCount - 1, fallbackResponses.length - 1)];
     }

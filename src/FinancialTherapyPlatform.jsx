@@ -22,7 +22,7 @@ const FinancialTherapyPlatform = () => {
   const [speechRecognition, setSpeechRecognition] = useState(null);
   const [voiceProvider, setVoiceProvider] = useState('openai');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
-  const [selectedVoice, setSelectedVoice] = useState('nova');
+  const [selectedVoice, setSelectedVoice] = useState('alloy');
   
   // Scenarios page state
   const [selectedScenario, setSelectedScenario] = useState(null);
@@ -185,6 +185,9 @@ const FinancialTherapyPlatform = () => {
                   [`message_${newCount}`]: finalMessage
                 };
                 setConversationResponses(updatedResponses);
+                
+                // Parse financial data from user response
+                parseFinancialData(finalMessage, newCount);
                 
                 // Clear input and generate conversational response
                 setChatInput('');
@@ -363,37 +366,45 @@ const FinancialTherapyPlatform = () => {
     }
   ];
 
-  // Dynamic conversation system based on user responses
+  // Natural conversation system that builds on user responses
   const getDynamicConversationResponse = (userResponse, messageCount, usedQuestions = []) => {
     const response = userResponse.toLowerCase();
-    let acknowledgment = "";
-    let nextQuestion = "";
+    let conversationFlow = "";
     
     console.log(`🎯 Conversation - Message count: ${messageCount}, User response: "${userResponse}"`);
     
-    // Always start with feelings question
+    // First response - deeply acknowledge and explore their feelings
     if (messageCount === 1) {
-      // Acknowledge their emotional response
       if (response.includes('stress') || response.includes('anxiety') || response.includes('overwhelm') || response.includes('worried')) {
-        acknowledgment = "I can really hear that stress in what you're sharing. Money anxiety affects so many people, and it touches everything in life, doesn't it? ";
-        // Follow up with either zero stress vision or barriers question
-        nextQuestion = "If you had zero money stress for the next year, how would your life look different?";
+        conversationFlow = `I can really hear that stress in what you're sharing. Money anxiety is so much more than just numbers, isn't it? It's this constant background hum that affects how you sleep, how you make decisions, even how you feel about yourself.
+
+        When you say ${userResponse.includes('stress') ? 'stressed' : userResponse.includes('anxiety') ? 'anxious' : 'overwhelmed'}, what does that actually feel like in your body? Like, is it that tight chest feeling when bills come in, or more like your brain just won't stop calculating and recalculating?
+
+        I'm asking because money stress shows up so differently for everyone, and understanding YOUR specific version of it helps me understand what kind of relief you're really looking for.`;
       } else if (response.includes('confused') || response.includes('complicated') || response.includes('lost') || response.includes('don\'t know')) {
-        acknowledgment = "That feeling of confusion around money is so relatable. It can feel like everyone else has it figured out while you're just winging it. ";
-        // Follow up with daily approach question
-        nextQuestion = "What's your current approach to handling money day-to-day — do you plan, track, or just go with the flow?";
+        conversationFlow = `That feeling of confusion around money is so relatable, and honestly? It makes total sense. Personal finance advice is everywhere, but it's often generic and doesn't fit your actual life.
+
+        When you say you feel ${userResponse.includes('confused') ? 'confused' : userResponse.includes('lost') ? 'lost' : 'like you don\'t know'}, what specifically feels unclear? Is it like... you know you should be doing "something" with your money but you're not sure what? Or is it more that you've tried different approaches and none of them stick?
+
+        Because there's a big difference between "I don't know where to start" and "I've tried things but they don't work for me." And I want to meet you where you actually are.`;
       } else if (response.includes('good') || response.includes('fine') || response.includes('stable') || response.includes('confident')) {
-        acknowledgment = "That's wonderful to hear! It sounds like you've found some stability and confidence with money. ";
-        // Follow up with good decision question
-        nextQuestion = "Tell me about a money decision you made recently that you felt really good about — what made it feel right?";
+        conversationFlow = `That's really wonderful to hear! There's something so grounding about feeling ${userResponse.includes('confident') ? 'confident' : 'stable'} with money. It sounds like you've found some things that work for you.
+
+        I'm curious though - when you say you feel ${response.includes('good') ? 'good' : response.includes('confident') ? 'confident' : 'stable'}, what does that actually look like day-to-day? Like, is it that you sleep well knowing your bills are handled, or more that you feel in control when making spending decisions?
+
+        And here's what I'm really wondering: even when things feel good, is there still a part of you that wonders if you could be doing better, or optimizing somehow? Because a lot of people who feel "fine" with money still have this nagging sense they might be missing something.`;
       } else if (response.includes('frustrated') || response.includes('angry') || response.includes('annoyed')) {
-        acknowledgment = "I can feel that frustration. Money can be so emotionally charged, especially when it feels like it's not cooperating with your plans. ";
-        // Follow up with barriers question
-        nextQuestion = "What usually holds you back from making the money moves you know you should?";
+        conversationFlow = `I can feel that frustration coming through, and honestly? Good. I'm glad you're not just accepting whatever isn't working. Frustration often means you know something needs to change but you haven't found the right approach yet.
+
+        When you think about what's making you feel ${userResponse.includes('angry') ? 'angry' : 'frustrated'}, is it more about the money itself, or about your relationship with it? Like, are you frustrated because there's not enough money, or because money feels like this constant source of decisions and stress?
+
+        Because I've noticed people get frustrated with money for really different reasons. Some people are mad at the system, some are mad at themselves, and some are just tired of thinking about it all the time. Where do you land in that?`;
       } else {
-        acknowledgment = "Thank you for being so honest with me about that. ";
-        // Default to good decision question
-        nextQuestion = "Tell me about a money decision you made recently that you felt really good about — what made it feel right?";
+        conversationFlow = `Thank you for sharing that with me. I can tell there's a lot more depth to how you're feeling about money than just those few words.
+
+        You know what I find interesting? Most people, when they first think about their relationship with money, they give me the "surface level" answer - the thing they think they're supposed to say, or the most obvious feeling. But then when we dig a little deeper, there's usually this whole other layer underneath.
+
+        So let me ask you this: if you had to describe not just how you feel about money, but how money makes you feel about yourself... what would that sound like? Because that's often where the real conversation starts.`;
       }
     }
     
@@ -519,6 +530,9 @@ const FinancialTherapyPlatform = () => {
       [`message_${newCount}`]: chatInput
     };
     setConversationResponses(updatedResponses);
+    
+    // Parse financial data from user response
+    parseFinancialData(chatInput, newCount);
 
     setTimeout(() => {
       // Generate structured conversation response
@@ -816,6 +830,226 @@ const FinancialTherapyPlatform = () => {
     }
   };
 
+  // Financial data parsing function
+  const parseFinancialData = (text, messageCount) => {
+    const lowerText = text.toLowerCase();
+    let updates = {};
+    
+    // Parse income mentions
+    const incomeRegex = /(?:make|earn|income|salary)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|per year|annually|year|monthly|month|per month)?/gi;
+    let match = incomeRegex.exec(lowerText);
+    if (match) {
+      let amount = parseFloat(match[1].replace(/,/g, ''));
+      if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
+      if (lowerText.includes('month') && !lowerText.includes('year')) amount *= 12;
+      updates.currentIncome = amount;
+    }
+    
+    // Parse expenses mentions
+    const expenseRegex = /(?:spend|expenses|cost|pay)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|per month|monthly|month|year|annually)?/gi;
+    match = expenseRegex.exec(lowerText);
+    if (match) {
+      let amount = parseFloat(match[1].replace(/,/g, ''));
+      if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
+      if (lowerText.includes('year') && !lowerText.includes('month')) amount /= 12;
+      updates.monthlyExpenses = amount;
+    }
+    
+    // Parse debt mentions
+    const debtRegex = /(?:debt|owe|loan|borrowed)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand)?/gi;
+    match = debtRegex.exec(lowerText);
+    if (match) {
+      let amount = parseFloat(match[1].replace(/,/g, ''));
+      if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
+      
+      // Categorize debt type
+      if (lowerText.includes('student') || lowerText.includes('college') || lowerText.includes('school')) {
+        updates['debt.student'] = amount;
+      } else if (lowerText.includes('credit') || lowerText.includes('card')) {
+        updates['debt.credit'] = amount;
+      } else if (lowerText.includes('car') || lowerText.includes('auto') || lowerText.includes('vehicle')) {
+        updates['debt.car'] = amount;
+      } else if (lowerText.includes('mortgage') || lowerText.includes('house') || lowerText.includes('home')) {
+        updates['debt.mortgage'] = amount;
+      } else {
+        updates['debt.other'] = amount;
+      }
+    }
+    
+    // Parse savings mentions
+    const savingsRegex = /(?:saved|savings|save|emergency fund|nest egg)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand)?/gi;
+    match = savingsRegex.exec(lowerText);
+    if (match) {
+      let amount = parseFloat(match[1].replace(/,/g, ''));
+      if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
+      if (lowerText.includes('emergency')) {
+        updates.emergencyFund = amount;
+      } else {
+        updates.currentSavings = amount;
+      }
+    }
+    
+    // Parse age mentions
+    const ageRegex = /(?:i'm|i am|age|years old)(?:\s+)(\d+)/gi;
+    match = ageRegex.exec(lowerText);
+    if (match) {
+      updates.age = parseInt(match[1]);
+    }
+    
+    // Parse family status
+    if (lowerText.includes('married') || lowerText.includes('spouse') || lowerText.includes('husband') || lowerText.includes('wife')) {
+      updates.familyStatus = 'married';
+    } else if (lowerText.includes('single') || lowerText.includes('alone') || lowerText.includes('by myself')) {
+      updates.familyStatus = 'single';
+    }
+    
+    // Parse financial goals
+    if (lowerText.includes('buy a house') || lowerText.includes('home') || lowerText.includes('mortgage')) {
+      updates['financialGoals.buyHome'] = true;
+    }
+    if (lowerText.includes('travel') || lowerText.includes('vacation') || lowerText.includes('trip')) {
+      updates['financialGoals.travel'] = true;
+    }
+    if (lowerText.includes('retire early') || lowerText.includes('early retirement')) {
+      updates['financialGoals.earlyRetirement'] = true;
+    }
+    if (lowerText.includes('business') || lowerText.includes('start my own') || lowerText.includes('entrepreneur')) {
+      updates['financialGoals.startBusiness'] = true;
+    }
+    if (lowerText.includes('pay off debt') || lowerText.includes('debt free') || lowerText.includes('pay down')) {
+      updates['financialGoals.payOffDebt'] = true;
+    }
+    
+    return updates;
+  };
+  
+  // Calculate comprehensive financial metrics
+  const calculateFinancialMetrics = (profile) => {
+    const monthlyIncome = profile.currentIncome / 12;
+    const totalDebt = Object.values(profile.debt || {}).reduce((sum, debt) => sum + (debt || 0), 0);
+    const debtToIncomeRatio = totalDebt / profile.currentIncome;
+    const monthlyDebtPayment = profile.monthlyDebtPayment || (totalDebt * 0.02); // Assume 2% minimum
+    const emergencyFundMonths = profile.emergencyFund / profile.monthlyExpenses;
+    const monthlyBalance = monthlyIncome - profile.monthlyExpenses - monthlyDebtPayment;
+    const savingsRate = monthlyBalance / monthlyIncome;
+    
+    return {
+      monthlyIncome: Math.round(monthlyIncome),
+      totalDebt: Math.round(totalDebt),
+      debtToIncomeRatio: Math.round(debtToIncomeRatio * 100) / 100,
+      monthlyDebtPayment: Math.round(monthlyDebtPayment),
+      emergencyFundMonths: Math.round(emergencyFundMonths * 10) / 10,
+      monthlyBalance: Math.round(monthlyBalance),
+      savingsRate: Math.round(savingsRate * 100),
+      netWorth: Math.round((profile.currentSavings + profile.investments + profile.retirement401k) - totalDebt)
+    };
+  };
+  
+  // Generate personalized insights based on actual financial data
+  const generatePersonalizedInsights = (responses, allText, profile, metrics) => {
+    const insights = [];
+    
+    // Financial Health Assessment
+    insights.push({
+      category: "💰 Your Financial Health",
+      title: `Net Worth: $${metrics.netWorth.toLocaleString()}`,
+      description: `Based on your conversation, here's your current financial snapshot.`,
+      deepInsight: `Your debt-to-income ratio is ${(metrics.debtToIncomeRatio * 100).toFixed(1)}% ${metrics.debtToIncomeRatio > 0.36 ? '(consider reducing debt)' : '(healthy level)'}. Emergency fund covers ${metrics.emergencyFundMonths} months of expenses ${metrics.emergencyFundMonths < 3 ? '(build to 3-6 months)' : '(good coverage)'}.`,
+      actionItems: [
+        `Monthly surplus: $${metrics.monthlyBalance} - ${metrics.monthlyBalance > 0 ? 'allocate to savings/investments' : 'reduce expenses or increase income'}`,
+        `Emergency fund goal: $${Math.round(profile.monthlyExpenses * 6)} (${metrics.emergencyFundMonths < 6 ? `need $${Math.round((6 - metrics.emergencyFundMonths) * profile.monthlyExpenses)} more)` : 'fully funded!'}`
+      ]
+    });
+    
+    // Debt Analysis
+    if (metrics.totalDebt > 0) {
+      const payoffTime = Math.ceil(metrics.totalDebt / metrics.monthlyDebtPayment / 12);
+      insights.push({
+        category: "🎯 Debt Strategy",
+        title: `Total Debt: $${metrics.totalDebt.toLocaleString()}`,
+        description: `At current payments of $${metrics.monthlyDebtPayment}/month, you'll be debt-free in ${payoffTime} years.`,
+        deepInsight: `Increasing payments by just $100/month could save you ${Math.round(payoffTime * 0.2)} years and thousands in interest.`,
+        actionItems: [
+          `Consider debt avalanche: pay minimums on all debts, extra on highest interest rate`,
+          `If you paid $${metrics.monthlyDebtPayment + 200}/month instead, you'd save approximately $${Math.round(metrics.totalDebt * 0.15)} in interest`,
+          `Focus on credit card debt first (typically 18-25% interest vs 3-7% for student loans)`
+        ]
+      });
+    }
+    
+    // Savings & Investment Recommendations
+    const recommendedSavingsRate = 20;
+    const currentSavingsRate = metrics.savingsRate;
+    insights.push({
+      category: "📈 Wealth Building",
+      title: `Savings Rate: ${currentSavingsRate}%`,
+      description: `You're currently saving ${currentSavingsRate}% of income. Target is ${recommendedSavingsRate}% for financial independence.`,
+      deepInsight: `At your current rate, you'll have $${Math.round(metrics.monthlyBalance * 12 * 10 * 1.07).toLocaleString()} in 10 years (7% growth). Reaching 20% savings rate would give you $${Math.round(profile.currentIncome * 0.2 * 10 * 1.07).toLocaleString()}.`,
+      actionItems: [
+        `Automate $${Math.round((recommendedSavingsRate - currentSavingsRate) * profile.currentIncome / 100 / 12)}/month to reach 20% savings rate`,
+        `Max out 401k match first (free money), then Roth IRA ($6,500/year limit)`,
+        `Consider low-cost index funds: VTI (total market) or VOO (S&P 500) with 0.03% fees`
+      ]
+    });
+    
+    // Personalized goals based on conversation
+    if (profile.financialGoals.buyHome) {
+      const homePrice = profile.currentIncome * 3; // Conservative estimate
+      const downPayment = homePrice * 0.2;
+      const monthsToSave = Math.ceil(downPayment / metrics.monthlyBalance);
+      insights.push({
+        category: "🏠 Home Buying Plan",
+        title: `Target Home: $${homePrice.toLocaleString()}`,
+        description: `Based on your income, a $${homePrice.toLocaleString()} home is realistic (3x income rule).`,
+        deepInsight: `You'll need $${downPayment.toLocaleString()} for 20% down payment. At current savings rate, that's ${Math.round(monthsToSave/12)} years.`,
+        actionItems: [
+          `Save $${Math.round(downPayment / (monthsToSave > 36 ? 36 : monthsToSave))}/month for ${monthsToSave > 36 ? 3 : Math.round(monthsToSave/12)} years`,
+          `Keep down payment in high-yield savings (currently ~5% APY)`,
+          `Get pre-approved to understand exact budget and improve credit score if needed`
+        ]
+      });
+    }
+    
+    // Analyze conversation for emotional insights
+    const emotionalInsight = analyzeEmotionalPatterns(allText, responses);
+    if (emotionalInsight) insights.push(emotionalInsight);
+    
+    return insights;
+  };
+  
+  // Analyze emotional patterns for personalized coaching
+  const analyzeEmotionalPatterns = (text, responses) => {
+    const firstResponse = responses.message_1?.toLowerCase() || '';
+    
+    if (firstResponse.includes('stress') || firstResponse.includes('anxiety') || firstResponse.includes('overwhelm')) {
+      return {
+        category: "🧠 Money Psychology",
+        title: "Managing Financial Anxiety",
+        description: "You mentioned feeling stressed about money. This is completely normal and shows you care about your financial future.",
+        deepInsight: "Financial anxiety often decreases as you gain control and clarity. Having concrete numbers and a plan can reduce the unknown that creates stress.",
+        actionItems: [
+          "Schedule weekly 'money dates' - 30 minutes to review progress and feel in control",
+          "Use the 'worst case scenario' exercise: what would you do if income dropped 20%?",
+          "Celebrate small wins: every $500 saved, every month of expenses covered by emergency fund"
+        ]
+      };
+    } else if (firstResponse.includes('excited') || firstResponse.includes('hopeful') || firstResponse.includes('motivated')) {
+      return {
+        category: "🚀 Momentum Building",
+        title: "Channeling Your Financial Energy",
+        description: "Your positive attitude toward money is a huge asset. Let's turn that energy into sustainable habits.",
+        deepInsight: "Motivation gets you started, but systems keep you going. Your enthusiasm can fuel the creation of automated financial systems.",
+        actionItems: [
+          "Set up automatic transfers the day after payday (pay yourself first)",
+          "Use apps like Mint or YNAB to track progress visually",
+          "Join financial independence communities (Reddit FIRE, Facebook groups) for continued motivation"
+        ]
+      };
+    }
+    
+    return null;
+  };
+
   const generateLifestyleAnalysis = () => {
     const responses = conversationResponses;
     const allResponsesText = Object.values(responses).filter(Boolean).join(' ').toLowerCase();
@@ -823,16 +1057,28 @@ const FinancialTherapyPlatform = () => {
     console.log('🔍 Generating insights with responses:', responses);
     console.log('🔍 All text:', allResponsesText);
     
-    // Analyze therapeutic conversation responses
-    const insights = analyzeTherapeuticResponses(responses, allResponsesText);
-    console.log('🔍 Generated insights:', insights);
+    // Parse financial data from all responses
+    let parsedData = {};
+    Object.values(responses).forEach((response, index) => {
+      if (response) {
+        const data = parseFinancialData(response, index + 1);
+        parsedData = { ...parsedData, ...data };
+      }
+    });
+    
+    // Calculate comprehensive financial metrics
+    const metrics = calculateFinancialMetrics(financialProfile);
+    
+    // Generate data-driven insights
+    const insights = generatePersonalizedInsights(responses, allResponsesText, financialProfile, metrics);
+    console.log('🔍 Generated personalized insights:', insights);
     
     // Use insights or fallback
     let finalInsights;
     if (insights && insights.length > 0) {
       finalInsights = insights;
       setPersonalizedInsights(insights);
-      console.log('✅ Insights set successfully');
+      console.log('✅ Personalized insights set successfully');
     } else {
       console.error('❌ No insights generated, using fallback');
       // Fallback insights if analysis fails
@@ -870,14 +1116,35 @@ const FinancialTherapyPlatform = () => {
 
   const calculateFinancialImpact = () => {
     const responses = conversationResponses;
-    const monthlyWaste = parseInt(responses.waste_spending) || 100;
-    const yearlyWaste = monthlyWaste * 12;
-    const tenYearInvested = yearlyWaste * 10 * 1.07;
+    const metrics = calculateFinancialMetrics(financialProfile);
+    
+    // Calculate real financial projections
+    const monthlyBalance = metrics.monthlyBalance;
+    const yearlyBalance = monthlyBalance * 12;
+    const tenYearInvested = yearlyBalance * 10 * 1.07; // Assuming 7% annual return
+    const twentyYearInvested = yearlyBalance * 20 * 1.07;
+    
+    // Emergency fund progress
+    const emergencyFundGoal = financialProfile.monthlyExpenses * 6;
+    const emergencyFundProgress = (financialProfile.emergencyFund / emergencyFundGoal) * 100;
+    
+    // Debt payoff timeline
+    const debtPayoffYears = metrics.totalDebt > 0 ? Math.ceil(metrics.totalDebt / metrics.monthlyDebtPayment / 12) : 0;
     
     return {
-      monthlyWaste,
-      yearlyWaste,
-      tenYearInvested: Math.round(tenYearInvested)
+      monthlyBalance,
+      yearlyBalance,
+      tenYearInvested,
+      twentyYearInvested,
+      emergencyFundProgress: Math.min(emergencyFundProgress, 100),
+      emergencyFundGoal,
+      currentEmergencyFund: financialProfile.emergencyFund,
+      debtPayoffYears,
+      netWorth: metrics.netWorth,
+      savingsRate: metrics.savingsRate,
+      debtToIncomeRatio: metrics.debtToIncomeRatio,
+      totalDebt: metrics.totalDebt,
+      monthlyIncome: metrics.monthlyIncome
     };
   };
 
@@ -1110,41 +1377,38 @@ const FinancialTherapyPlatform = () => {
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-20 text-center">
         <div className="mb-16">
-          <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8">
-            <span className="text-2xl mr-3">🤖</span>
-            <span className="text-lg font-medium">Your Personal Financial Therapist</span>
+          <div className="inline-flex items-center px-6 py-3 rounded-lg bg-white/90 text-gray-900 border mb-8">
+            <span className="text-lg font-medium">AI Financial Therapy Platform</span>
           </div>
 
           <h1 className="text-6xl md:text-8xl font-black mb-8">
-            <span className="block bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+            <span className="block text-white">
               Feel better about
             </span>
-            <span className="block text-white">
+            <span className="block text-white/80">
               your money
             </span>
           </h1>
 
-          <p className="text-2xl text-white/80 mb-8 max-w-3xl mx-auto">
-            I'm your AI financial therapist. In a <span className="text-yellow-400 font-semibold">5-minute voice conversation</span>,
-            I'll help you understand how your lifestyle choices impact your financial future.
+          <p className="text-2xl text-white/90 mb-8 max-w-3xl mx-auto">
+            AI-powered financial therapy through <span className="text-white font-semibold">natural conversation</span>.
+            Understand your money patterns and build a healthier financial future.
           </p>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 max-w-2xl mx-auto mb-12 border border-white/10">
-            <p className="text-lg text-white/80">
-              <span className="text-orange-400 font-semibold">Talk naturally.</span><br/>
-              <span className="text-yellow-400 font-semibold">I'll talk back.</span><br/>
-              Understanding your relationship with money through conversation.
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto mb-12 border border-white/20">
+            <p className="text-lg text-white/90 leading-relaxed">
+              <span className="font-semibold">Talk naturally.</span> Get personalized insights.
+              <br/>Transform your relationship with money through intelligent conversation.
             </p>
           </div>
 
           <button
             onClick={() => setCurrentPage('conversation')}
-            className="group relative px-12 py-6 bg-gradient-to-r from-orange-600 via-yellow-600 to-orange-500 rounded-2xl font-bold text-2xl hover:shadow-2xl hover:shadow-orange-500/40 transform hover:scale-105 transition-all duration-300 overflow-hidden"
+            className="group relative px-12 py-4 bg-white text-gray-900 rounded-lg font-semibold text-xl hover:bg-white/90 transform hover:scale-105 transition-all duration-300"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-yellow-600 to-orange-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
             <span className="relative z-10 flex items-center gap-3">
-              <span>Start Voice Conversation</span>
-              <span>🎙️</span>
+              <span>Start Conversation</span>
+              <span>→</span>
             </span>
           </button>
         </div>
@@ -1153,65 +1417,60 @@ const FinancialTherapyPlatform = () => {
         <div className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">Your Journey</span>
+              How it works
             </h2>
-            <p className="text-xl text-white/80">Here's exactly what happens, step by step</p>
+            <p className="text-xl text-white/80">Simple, professional, effective</p>
           </div>
 
           <div className="max-w-4xl mx-auto">
             <div className="relative">
               {/* Connection line */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-400 to-yellow-400 transform -translate-x-1/2 hidden md:block"></div>
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 transform -translate-x-1/2 hidden md:block"></div>
               
               <div className="space-y-12">
                 {[
                   {
                     step: 1,
-                    icon: "🎙️",
                     title: "Start Your Conversation",
                     description: "Click the button and start talking naturally. I'll ask thoughtful questions about your relationship with money - no judgment, just understanding.",
                     duration: "5 minutes"
                   },
                   {
                     step: 2,
-                    icon: "🧠",
-                    title: "I Analyze Your Patterns",
+                    title: "Analysis & Insights",
                     description: "While we talk, I'm identifying your financial personality, money beliefs, and spending patterns. I discover what makes you feel secure vs. anxious about money.",
                     duration: "Real-time"
                   },
                   {
                     step: 3,
-                    icon: "📊",
-                    title: "Get Your Personal Report",
+                    title: "Personal Report",
                     description: "Receive deep insights about your financial psychology, personalized recommendations, and see how small changes could impact your future wealth.",
                     duration: "Instant"
                   },
                   {
                     step: 4,
-                    icon: "🎯",
-                    title: "Take Action with Tools",
+                    title: "Take Action",
                     description: "Use our What-If scenarios, learn from our finance guides, track your progress, and build the financial life you want with confidence.",
                     duration: "Ongoing"
                   }
                 ].map((item, index) => (
                   <div key={index} className="relative flex items-center">
                     {/* Step indicator */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center font-bold text-black text-lg z-10 hidden md:flex">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-gray-900 text-sm z-10 hidden md:flex">
                       {item.step}
                     </div>
                     
                     {/* Content */}
                     <div className={`w-full md:w-5/12 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8 md:ml-auto'}`}>
-                      <div className={`bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 ${index % 2 === 0 ? 'md:text-right' : ''}`}>
+                      <div className={`bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 ${index % 2 === 0 ? 'md:text-right' : ''}`}>
                         <div className={`flex items-center gap-3 mb-4 ${index % 2 === 0 ? 'md:justify-end' : ''}`}>
-                          <div className="text-3xl">{item.icon}</div>
-                          <div className="md:hidden w-8 h-8 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center font-bold text-black text-sm">
+                          <div className="md:hidden w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-gray-900 text-sm">
                             {item.step}
                           </div>
                         </div>
                         <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
                         <p className="text-white/80 mb-3">{item.description}</p>
-                        <div className="inline-flex items-center px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-sm font-medium">
+                        <div className="inline-flex items-center px-3 py-1 rounded bg-white/20 text-white text-sm font-medium">
                           {item.duration}
                         </div>
                       </div>
@@ -1226,23 +1485,19 @@ const FinancialTherapyPlatform = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              icon: "🎙️",
               title: "Voice Conversation", 
               desc: "Talk naturally - I'll listen and respond with my voice too"
             },
             {
-              icon: "💡",
-              title: "Eye-Opening Insights",
+              title: "Personalized Insights",
               desc: "See the real financial impact of your daily choices"
             },
             {
-              icon: "❤️",
               title: "Your Money Story",
               desc: "Understand your relationship with money - no judgment"
             }
           ].map((item, i) => (
-            <div key={i} className="group bg-gradient-to-br from-gray-800/50 to-orange-900/30 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
-              <div className="text-4xl mb-4">{item.icon}</div>
+            <div key={i} className="group bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
               <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
               <p className="text-white/80">{item.desc}</p>
             </div>
@@ -1259,7 +1514,7 @@ const FinancialTherapyPlatform = () => {
         <div className="max-w-7xl mx-auto p-6">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
-              💬 Financial Therapy Session
+              Financial Therapy Session
             </h1>
             <p className="text-white/80 mb-4">
               A safe space to explore your relationship with money
@@ -1489,8 +1744,8 @@ const FinancialTherapyPlatform = () => {
     // Always ensure we have at least basic insights
     const insights = personalizedInsights && personalizedInsights.length > 0 ? personalizedInsights : [
       {
-        category: "📊 Your Conversation Summary",
-        title: "💬 Thank You for Sharing",
+        category: "Your Conversation Summary",
+        title: "Thank You for Sharing",
         description: "You completed our financial therapy session and shared valuable insights about your relationship with money.",
         deepInsight: "Every conversation about money is a step toward better financial wellness.",
         actionItems: [
@@ -1505,8 +1760,8 @@ const FinancialTherapyPlatform = () => {
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black">
         <div className="max-w-4xl mx-auto p-6 text-white">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-            🎯 Your Financial Therapy Results
+          <h1 className="text-4xl font-bold mb-4 text-white">
+            Your Financial Therapy Results
           </h1>
           <p className="text-xl text-white/80">
             Here's what your lifestyle choices reveal about your financial future
@@ -1514,50 +1769,48 @@ const FinancialTherapyPlatform = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/40 backdrop-blur-sm rounded-3xl p-8 border border-yellow-700/30">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-2xl">😊</span>
-              <h3 className="text-2xl font-bold text-white">Your Joy Analysis</h3>
+              <h3 className="text-2xl font-bold text-white">Personal Analysis</h3>
             </div>
             
             <div className="space-y-4">
-              <div className="bg-yellow-800/30 rounded-xl p-4">
-                <div className="text-yellow-300 font-medium mb-2">💭 How You Feel About Money:</div>
-                <div className="text-white italic">"{conversationResponses.message_1 || 'Your honest feelings about your financial situation'}"</div>
+              <div className="bg-white/10 rounded-lg p-4">
+                <div className="text-white font-medium mb-2">How You Feel About Money:</div>
+                <div className="text-white/80 italic">"{conversationResponses.message_1 || 'Your honest feelings about your financial situation'}"</div>
               </div>
               
-              <div className="bg-orange-800/30 rounded-xl p-4">
-                <div className="text-orange-300 font-medium mb-2">💖 What Brings You Joy:</div>
-                <div className="text-white italic">"{conversationResponses.message_2 || 'Decisions that made you feel good'}"</div>
+              <div className="bg-white/10 rounded-lg p-4">
+                <div className="text-white font-medium mb-2">What Brings You Joy:</div>
+                <div className="text-white/80 italic">"{conversationResponses.message_2 || 'Decisions that made you feel good'}"</div>
               </div>
               
-              <div className="bg-orange-800/30 rounded-xl p-4">
-                <div className="text-orange-300 font-medium mb-2">🎯 Your Goals:</div>
-                <div className="text-white italic text-sm">"{conversationResponses.message_3 || 'What you want to change about your financial life'}"</div>
+              <div className="bg-white/10 rounded-lg p-4">
+                <div className="text-white font-medium mb-2">Your Goals:</div>
+                <div className="text-white/80 italic text-sm">"{conversationResponses.message_3 || 'What you want to change about your financial life'}"</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-900/50 to-orange-900/40 backdrop-blur-sm rounded-3xl p-8 border border-orange-700/30">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-2xl">💰</span>
-              <h3 className="text-2xl font-bold text-white">The Money Story</h3>
+              <h3 className="text-2xl font-bold text-white">Financial Impact</h3>
             </div>
             
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-4xl font-bold text-orange-400 mb-2">${impact.monthlyWaste}</div>
+                <div className="text-4xl font-bold text-white mb-2">${impact.monthlyWaste}</div>
                 <div className="text-white/80 text-sm">Monthly redirectable spending</div>
               </div>
               
               <div className="text-center">
-                <div className="text-3xl font-bold text-orange-400 mb-2">${impact.yearlyWaste.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-white mb-2">${impact.yearlyWaste.toLocaleString()}</div>
                 <div className="text-white/80 text-sm">Yearly opportunity</div>
               </div>
               
-              <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl p-4 text-center">
+              <div className="bg-white/20 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-white mb-1">${impact.tenYearInvested.toLocaleString()}</div>
-                <div className="text-white text-sm">If invested for 10 years at 7% return</div>
+                <div className="text-white/80 text-sm">If invested for 10 years at 7% return</div>
               </div>
             </div>
           </div>
@@ -1566,8 +1819,8 @@ const FinancialTherapyPlatform = () => {
         {insights.length > 0 && (
           <div className="mb-12">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-4 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                🧠 Your Life Values Report
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Your Personal Insights
               </h2>
               <p className="text-white/80">Deep insights into your financial personality and patterns</p>
             </div>
@@ -1576,31 +1829,31 @@ const FinancialTherapyPlatform = () => {
               {insights.map((insight, index) => (
                 <div
                   key={index}
-                  className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-3xl p-8 border border-white/30"
+                  className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20"
                 >
                   <div className="mb-6">
-                    <div className="text-sm text-yellow-400 font-medium mb-2">{insight.category}</div>
+                    <div className="text-sm text-white/60 font-medium mb-2">{insight.category}</div>
                     <h3 className="text-2xl font-bold text-white mb-4">{insight.title}</h3>
                     <p className="text-white/80 leading-relaxed mb-4">{insight.description}</p>
                     
                     {insight.deepInsight && (
-                      <div className="bg-orange-900/30 rounded-xl p-4 mb-4 border border-orange-700/30">
-                        <div className="text-orange-300 font-medium mb-2 text-sm">🔮 Deep Insight:</div>
-                        <p className="text-gray-200 text-sm">{insight.deepInsight}</p>
+                      <div className="bg-white/10 rounded-lg p-4 mb-4 border border-white/20">
+                        <div className="text-white font-medium mb-2 text-sm">Key Insight:</div>
+                        <p className="text-white/80 text-sm">{insight.deepInsight}</p>
                       </div>
                     )}
                   </div>
 
                   {insight.actionItems && insight.actionItems.length > 0 && (
                     <div>
-                      <div className="text-white font-medium mb-3 flex items-center gap-2">🎯 Action Steps:</div>
+                      <div className="text-white font-medium mb-3">Next Steps:</div>
                       <div className="space-y-2">
                         {insight.actionItems.map((action, actionIndex) => (
                           <div
                             key={actionIndex}
-                            className="flex items-start gap-3 text-sm text-white/80 bg-black/30 rounded-lg p-3"
+                            className="flex items-start gap-3 text-sm text-white/80 bg-white/10 rounded-lg p-3"
                           >
-                            <div className="text-yellow-400 mt-0.5">•</div>
+                            <div className="text-white mt-0.5">•</div>
                             <div>{action}</div>
                           </div>
                         ))}
@@ -1613,33 +1866,29 @@ const FinancialTherapyPlatform = () => {
           </div>
         )}
 
-        <div className="bg-gradient-to-r from-yellow-900/50 to-orange-900/40 backdrop-blur-sm rounded-3xl p-8 border border-yellow-700/30 mb-12 text-center">
-          <div className="text-4xl mb-4">💡</div>
-          <h3 className="text-2xl font-bold text-white mb-4">Your Key Realization</h3>
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20 mb-12 text-center">
+          <h3 className="text-2xl font-bold text-white mb-4">Key Realization</h3>
           <p className="text-lg text-white/80 leading-relaxed">
-            You're not broke. You're not behind. You just need to <span className="text-yellow-400 font-semibold">redirect money you're already spending</span> from things that don't bring joy to things that build your future. The money is there - it's just going to the wrong places.
+            You're not broke. You're not behind. You just need to <span className="text-white font-semibold">redirect money you're already spending</span> from things that don't bring joy to things that build your future. The money is there - it's just going to the wrong places.
           </p>
         </div>
 
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-8 border border-white/20 text-center">
-          <h3 className="text-2xl font-bold text-white mb-6">🎯 Your Next Steps</h3>
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20 text-center">
+          <h3 className="text-2xl font-bold text-white mb-6">Your Next Steps</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30">
-              <div className="text-3xl mb-3">📊</div>
-              <h4 className="font-bold text-yellow-400 mb-2">Track for 1 Week</h4>
+            <div className="bg-white/10 rounded-lg p-6 border border-white/20">
+              <h4 className="font-bold text-white mb-2">Track for 1 Week</h4>
               <p className="text-sm text-white/80">Notice what brings joy vs what you regret</p>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-xl p-6 border border-orange-500/30">
-              <div className="text-3xl mb-3">✂️</div>
-              <h4 className="font-bold text-orange-400 mb-2">Cut One Thing</h4>
+            <div className="bg-white/10 rounded-lg p-6 border border-white/20">
+              <h4 className="font-bold text-white mb-2">Cut One Thing</h4>
               <p className="text-sm text-white/80">Cancel one subscription or habit that doesn't spark joy</p>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-xl p-6 border border-orange-500/30">
-              <div className="text-3xl mb-3">🎯</div>
-              <h4 className="font-bold text-orange-400 mb-2">Redirect</h4>
+            <div className="bg-white/10 rounded-lg p-6 border border-white/20">
+              <h4 className="font-bold text-white mb-2">Redirect</h4>
               <p className="text-sm text-white/80">Put that money toward your goal automatically</p>
             </div>
           </div>
@@ -1647,9 +1896,9 @@ const FinancialTherapyPlatform = () => {
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => setCurrentPage('profile')}
-              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition-all"
+              className="bg-white text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/90 transform hover:scale-105 transition-all"
             >
-              Set Up Your Profile 👤
+              Set Up Your Profile
             </button>
             
             <button
@@ -1660,9 +1909,9 @@ const FinancialTherapyPlatform = () => {
                 setCurrentConversationStep('intro');
                 setShowConversationResults(false);
               }}
-              className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition-all"
+              className="bg-white/20 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/30 transform hover:scale-105 transition-all border border-white/20"
             >
-              Start Fresh Session 🔄
+              Start Fresh Session
             </button>
           </div>
         </div>
@@ -2676,7 +2925,7 @@ const FinancialTherapyPlatform = () => {
   const renderLearnContent = () => {
     const topics = {
       investing: {
-        title: "📈 Investment Basics",
+        title: "Investment Basics",
         subtitle: "Your Guide to Growing Wealth",
         content: [
           {
@@ -2702,7 +2951,7 @@ const FinancialTherapyPlatform = () => {
         ]
       },
       budgeting: {
-        title: "💰 Budgeting 101",
+        title: "Budgeting 101",
         subtitle: "Creating a Budget That Actually Works",
         content: [
           {
@@ -2728,7 +2977,7 @@ const FinancialTherapyPlatform = () => {
         ]
       },
       emergency: {
-        title: "🛟 Emergency Fund",
+        title: "Emergency Fund",
         subtitle: "Building Your Financial Safety Net",
         content: [
           {
@@ -2781,14 +3030,14 @@ const FinancialTherapyPlatform = () => {
 
           <div className="space-y-8">
             {topic.content.map((section, index) => (
-              <div key={index} className="bg-black/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <h2 className="text-2xl font-bold text-orange-400 mb-4">{section.section}</h2>
+              <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
+                <h2 className="text-2xl font-bold text-white mb-4">{section.section}</h2>
                 <p className="text-white/80 leading-relaxed text-lg">{section.text}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-12 bg-gradient-to-r from-orange-900/50 to-yellow-900/50 backdrop-blur-sm rounded-2xl p-8 border border-orange-500/30 text-center">
+          <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20 text-center">
             <h3 className="text-2xl font-bold text-white mb-4">Ready to Take Action?</h3>
             <p className="text-white/80 mb-6">Apply what you've learned with our personalized tools and planning features.</p>
             
@@ -2798,7 +3047,7 @@ const FinancialTherapyPlatform = () => {
                   setSelectedLearnTopic(null);
                   setCurrentPage('scenarios');
                 }}
-                className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all"
+                className="bg-white text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-white/90 transform hover:scale-105 transition-all"
               >
                 Try What-If Scenarios
               </button>
@@ -2808,7 +3057,7 @@ const FinancialTherapyPlatform = () => {
                   setSelectedLearnTopic(null);
                   setCurrentPage('conversation');
                 }}
-                className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all"
+                className="bg-white/20 text-white px-6 py-3 rounded-lg font-medium hover:bg-white/30 transform hover:scale-105 transition-all border border-white/20"
               >
                 Start Financial Therapy
               </button>
@@ -2829,11 +3078,11 @@ const FinancialTherapyPlatform = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-            📚 Learn & Grow
+          <h1 className="text-4xl font-bold mb-3 text-white">
+            Financial Education
           </h1>
           <p className="text-xl text-white/80">
-            Master your money with bite-sized lessons
+            Master your money with expert guidance
           </p>
         </div>
 
@@ -2841,75 +3090,69 @@ const FinancialTherapyPlatform = () => {
           {/* Investment Basics */}
           <div 
             onClick={() => setSelectedLearnTopic('investing')}
-            className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-orange-400/50 transition-all cursor-pointer group"
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:border-white/40 hover:bg-white/15 transition-all cursor-pointer group"
           >
-            <div className="text-3xl mb-4">📈</div>
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">Investment Basics</h3>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-white transition-colors">Investment Basics</h3>
             <p className="text-white/70 mb-4">Learn the fundamentals of growing your wealth</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">5 min read</span>
-              <span className="text-yellow-400 hover:text-yellow-300 font-medium group-hover:translate-x-1 transition-transform">Start →</span>
+              <span className="text-sm text-white/60">5 min read</span>
+              <span className="text-white/80 hover:text-white font-medium group-hover:translate-x-1 transition-transform">Start →</span>
             </div>
           </div>
 
           {/* Budgeting 101 */}
           <div 
             onClick={() => setSelectedLearnTopic('budgeting')}
-            className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-orange-400/50 transition-all cursor-pointer group"
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:border-white/40 hover:bg-white/15 transition-all cursor-pointer group"
           >
-            <div className="text-3xl mb-4">💰</div>
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">Budgeting 101</h3>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-white transition-colors">Budgeting 101</h3>
             <p className="text-white/70 mb-4">Create a budget that actually works for you</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">7 min read</span>
-              <span className="text-yellow-400 hover:text-yellow-300 font-medium group-hover:translate-x-1 transition-transform">Start →</span>
+              <span className="text-sm text-white/60">7 min read</span>
+              <span className="text-white/80 hover:text-white font-medium group-hover:translate-x-1 transition-transform">Start →</span>
             </div>
           </div>
 
           {/* Emergency Fund */}
           <div 
             onClick={() => setSelectedLearnTopic('emergency')}
-            className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-orange-400/50 transition-all cursor-pointer group"
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:border-white/40 hover:bg-white/15 transition-all cursor-pointer group"
           >
-            <div className="text-3xl mb-4">🛟</div>
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">Emergency Fund</h3>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-white transition-colors">Emergency Fund</h3>
             <p className="text-white/70 mb-4">Build your financial safety net</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">4 min read</span>
-              <span className="text-yellow-400 hover:text-yellow-300 font-medium group-hover:translate-x-1 transition-transform">Start →</span>
+              <span className="text-sm text-white/60">4 min read</span>
+              <span className="text-white/80 hover:text-white font-medium group-hover:translate-x-1 transition-transform">Start →</span>
             </div>
           </div>
 
           {/* Debt Management */}
-          <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 opacity-60">
-            <div className="text-3xl mb-4">💳</div>
+          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 opacity-60">
             <h3 className="text-xl font-bold text-white mb-2">Debt Management</h3>
             <p className="text-white/70 mb-4">Smart strategies to pay off debt faster</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">Coming Soon</span>
-              <span className="text-gray-500 font-medium">Start →</span>
+              <span className="text-sm text-white/50">Coming Soon</span>
+              <span className="text-white/40 font-medium">Start →</span>
             </div>
           </div>
 
           {/* Retirement Planning */}
-          <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 opacity-60">
-            <div className="text-3xl mb-4">🏖️</div>
+          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 opacity-60">
             <h3 className="text-xl font-bold text-white mb-2">Retirement Planning</h3>
             <p className="text-white/70 mb-4">Secure your future with smart planning</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">Coming Soon</span>
-              <span className="text-gray-500 font-medium">Start →</span>
+              <span className="text-sm text-white/50">Coming Soon</span>
+              <span className="text-white/40 font-medium">Start →</span>
             </div>
           </div>
 
           {/* Financial Psychology */}
-          <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20 opacity-60">
-            <div className="text-3xl mb-4">🧠</div>
+          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 opacity-60">
             <h3 className="text-xl font-bold text-white mb-2">Money Psychology</h3>
             <p className="text-white/70 mb-4">Understand your relationship with money</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-yellow-400">Coming Soon</span>
-              <span className="text-gray-500 font-medium">Start →</span>
+              <span className="text-sm text-white/50">Coming Soon</span>
+              <span className="text-white/40 font-medium">Start →</span>
             </div>
           </div>
         </div>

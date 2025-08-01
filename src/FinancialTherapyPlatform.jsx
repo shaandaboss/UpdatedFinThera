@@ -381,88 +381,74 @@ const FinancialTherapyPlatform = () => {
     }
   ];
 
-  // Natural conversation system that builds on user responses
-  const getDynamicConversationResponse = (userResponse, messageCount, usedQuestions = []) => {
-    const response = userResponse.toLowerCase();
-    let conversationFlow = "";
-    
+  // Sequential conversation that always moves forward - no more repetition!
+  const getDynamicConversationResponse = (userResponse, messageCount) => {
     console.log(`🎯 Conversation - Message count: ${messageCount}, User response: "${userResponse}"`);
     
-    // First response - deeply acknowledge and explore their feelings
-    if (messageCount === 1) {
-      if (response.includes('stress') || response.includes('anxiety') || response.includes('overwhelm') || response.includes('worried')) {
-        conversationFlow = `I hear that stress. Where do you feel it most - in your chest, your head, or somewhere else?`;
-      } else if (response.includes('confused') || response.includes('complicated') || response.includes('lost') || response.includes('don\'t know')) {
-        conversationFlow = `That confusion makes total sense - money advice is everywhere but rarely fits real life. What feels most unclear to you right now?`;
-      } else if (response.includes('good') || response.includes('fine') || response.includes('stable') || response.includes('confident')) {
-        conversationFlow = `That's great to hear! What does feeling ${response.includes('confident') ? 'confident' : 'good'} with money actually look like for you day-to-day?`;
-      } else if (response.includes('frustrated') || response.includes('angry') || response.includes('annoyed')) {
-        conversationFlow = `I can feel that frustration - and honestly, good for you for not just accepting what isn't working. What's making you most ${userResponse.includes('angry') ? 'angry' : 'frustrated'} about money right now?`;
-      } else {
-        conversationFlow = `I can tell there's more depth here than just those few words. What's your biggest money worry keeping you up at night?`;
-      }
-    }
-    
-    // Second exchange - respond to their previous answer and continue the conversation
-    else if (messageCount === 2) {
-      // Build on their specific response with natural follow-ups
-      if (response.includes('making more money') || response.includes('more income') || response.includes('earn more')) {
-        conversationFlow = `That drive to earn more is so relatable. What does your ideal income situation look like - like, what would feel like "enough"?`;
-      } else if (response.includes('investing') || response.includes('invest') || response.includes('stocks') || response.includes('returns')) {
-        conversationFlow = `Love that you're thinking about investing! What's your dream scenario - like, what would you do if your investments really took off?`;
-      } else if (response.includes('control') || response.includes('manage') || response.includes('track') || response.includes('budget')) {
-        conversationFlow = `That control piece is huge. Picture your ideal day when money feels totally manageable - what does that look like?`;
-      } else if (response.includes('expenses') || response.includes('spending') || response.includes('bills') || response.includes('costs')) {
-        conversationFlow = `Yeah, expenses can feel overwhelming. If money wasn't a concern, what's the first thing you'd spend on without guilt?`;
-      } else if (response.includes('future') || response.includes('security') || response.includes('stable') || response.includes('retirement')) {
-        conversationFlow = `That future planning mindset is smart. What's your ideal life at 35 going to look like?`;
-      } else {
-        conversationFlow = `I can hear the ambition in what you're saying. Paint me a picture - what's your ideal lifestyle in 5 years?`;
-      }
-    }
-    
-    // Third exchange and beyond - continue building on their responses
-    else if (messageCount >= 3 && messageCount <= 6) {
-      const contextualStart = generateContextualAcknowledgment(response);
-      
-      if (messageCount === 3) {
-        conversationFlow = `${contextualStart}I love that vision! What would your perfect week look like if money was never a stress?`;
-      } else if (messageCount === 4) {
-        conversationFlow = `${contextualStart}That sounds amazing. What's one thing you'd splurge on if you hit your money goals?`;
-      } else if (messageCount === 5) {
-        conversationFlow = `${contextualStart}Nice! What's holding you back from that life right now - is it income, expenses, or something else?`;
-      } else {
-        conversationFlow = `${contextualStart}Got it. If you could fix one money thing tomorrow to get closer to that dream, what would it be?`;
-      }
-    }
-    
-    // Final exchange - wrap up
-    else if (messageCount >= 7) {
-      const contextualStart = generateContextualAcknowledgment(response);
-      conversationFlow = `${contextualStart}This has been so insightful. Let me pull together some personalized insights based on what you've shared...`;
-      
-      // Trigger final insights
-      setTimeout(() => {
-        console.log('🎯 Triggering final insights generation...');
-        try {
-          generateLifestyleAnalysis();
-        } catch (error) {
-          console.error('❌ Error generating insights:', error);
+    // Simple sequence - each message gets a specific question
+    const questions = [
+      // Message 1: Ask about their money goal
+      () => {
+        const response = userResponse.toLowerCase();
+        if (response.includes('stress') || response.includes('anxiety') || response.includes('overwhelm')) {
+          return `I hear that stress. What's one money goal that would help you stress less?`;
+        } else if (response.includes('good') || response.includes('confident') || response.includes('stable')) {
+          return `That's awesome! What's your next big money goal?`;
+        } else {
+          return `Got it. What's one money goal you'd love to achieve this year?`;
         }
-        
+      },
+      
+      // Message 2: Ask about ideal lifestyle
+      () => `I love that ambition! What would your ideal lifestyle look like in 5 years?`,
+      
+      // Message 3: Ask about dream purchase
+      () => `That vision sounds amazing! What's one thing you'd splurge on if money wasn't a concern?`,
+      
+      // Message 4: Ask about obstacles
+      () => `Nice choice! What do you think is holding you back from that dream life right now?`,
+      
+      // Message 5: Ask about one change
+      () => `That makes sense. If you could change one thing about your money situation tomorrow, what would it be?`,
+      
+      // Message 6: Ask about motivation
+      () => `Perfect! What motivates you most to get your finances on track?`,
+      
+      // Message 7: Wrap up
+      () => {
+        // Trigger final insights
         setTimeout(() => {
-          console.log('🎯 Setting showConversationResults to true');
-          setShowConversationResults(true);
-          setUserJourney(prev => ({
-            ...prev,
-            hasCompletedConversation: true,
-            currentStep: 'profile'
-          }));
-        }, 500); // Shorter delay
-      }, 1500);
-    }
+          console.log('🎯 Triggering final insights generation...');
+          try {
+            generateLifestyleAnalysis();
+          } catch (error) {
+            console.error('❌ Error generating insights:', error);
+          }
+          
+          setTimeout(() => {
+            console.log('🎯 Setting showConversationResults to true');
+            setShowConversationResults(true);
+            setUserJourney(prev => ({
+              ...prev,
+              hasCompletedConversation: true,
+              currentStep: 'profile'
+            }));
+          }, 500);
+        }, 1500);
+        
+        return `Love that drive! Let me create your personalized financial insights...`;
+      }
+    ];
     
-    return conversationFlow;
+    // Get the question for this message count (array is 0-indexed)
+    const questionFunction = questions[messageCount - 1];
+    
+    if (questionFunction) {
+      return questionFunction();
+    } else {
+      // Fallback - shouldn't happen but just in case
+      return `This has been so helpful. Let me create your personalized report...`;
+    }
   };
 
   // Generate contextual acknowledgments based on what user said

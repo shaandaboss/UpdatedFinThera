@@ -408,65 +408,73 @@ const FinancialTherapyPlatform = () => {
       }
     }
     
-    // Second exchange - respond to their previous answer and choose next question intelligently
+    // Second exchange - respond to their previous answer and continue the conversation
     else if (messageCount === 2) {
-      // Handle repetition complaints first
-      if (response.includes('asked') || response.includes('already') || response.includes('repeat') || response.includes('same')) {
-        acknowledgment = "You're absolutely right, I apologize for that repetition. Let me ask you something different. ";
-        nextQuestion = "What's one thing about your money situation that you wish could change right now?";
-      }
-      // Acknowledge what they shared about their good decision
-      else if (response.includes('bought') || response.includes('purchase') || response.includes('spend')) {
-        acknowledgment = "That sounds like it brought you real satisfaction. Those purchases that align with our values feel so different, don't they? ";
-        nextQuestion = "Was there a money choice you made that didn't sit well with you — what do you think led to that?";
-      } else if (response.includes('travel') || response.includes('experience') || response.includes('trip')) {
-        acknowledgment = "Experiences like that tend to stick with us in such meaningful ways. Those memories become part of who we are. ";
-        nextQuestion = "What's one thing about your money situation that you wish could change right now?";
-      } else if (response.includes('save') || response.includes('emergency') || response.includes('fund')) {
-        acknowledgment = "Building that safety net shows real foresight. There's something so calming about knowing you're prepared. ";
-        nextQuestion = "Growing up, how did the people around you (family, friends) influence how you think about money today?";
-      } else if (response.includes('invest') || response.includes('stock') || response.includes('401k') || response.includes('retirement')) {
-        acknowledgment = "That's fantastic that you're thinking about your future self. Investing can feel intimidating but you took action. ";
-        nextQuestion = "What usually holds you back from making the money moves you know you should?";
+      // Build on their first response
+      if (response.includes('tight') || response.includes('body') || response.includes('chest') || response.includes('brain')) {
+        conversationFlow = `Yes, exactly! You really get how this shows up physically. That mind-body connection with money is so real and so overlooked.
+        
+        I'm wondering - when you have those moments where your brain won't stop calculating or your chest gets tight, what usually brings you back to feeling more grounded? Is it talking it through with someone, or doing something with your hands, or maybe just getting really practical and making a list?
+        
+        Because I think understanding what already works for you, even in small ways, can help us figure out how to make the whole money thing feel more manageable.`;
+      } else if (response.includes('don\'t know') || response.includes('different') || response.includes('unclear')) {
+        conversationFlow = `That's such an honest answer, and it tells me you're really thinking about this, not just giving the automatic response. 
+        
+        Here's what I'm curious about: when you're making everyday money decisions - like whether to grab coffee out or make it at home, or whether to buy something online you've been wanting - what does that internal conversation sound like? 
+        
+        Do you find yourself overthinking those small choices, or do you make them pretty automatically and then maybe second-guess later?`;
+      } else if (response.includes('sleep') || response.includes('control') || response.includes('decisions')) {
+        conversationFlow = `That sense of being in control is so valuable. It sounds like you've found some strategies that actually work for you, which honestly puts you ahead of a lot of people.
+        
+        I'm curious though - and this might sound like a weird question - but do you ever feel like the "good" feeling about money comes with its own pressure? Like, now that you've got things somewhat figured out, do you worry about messing it up?
+        
+        Because I've noticed that people who feel in control sometimes carry this invisible weight of having to maintain that control perfectly.`;
       } else {
-        acknowledgment = "Thank you for sharing that with me. ";
-        nextQuestion = "What's one thing about your money situation that you wish could change right now?";
+        conversationFlow = `I can hear there's more to this story. Money brings up so many different feelings for people, and they're usually all tangled up together.
+        
+        Let me ask you something that might help us dig a little deeper: think about the last time you made a money decision that you felt really good about afterward. Not necessarily a big decision - could be anything. What made that one feel right?
+        
+        I'm asking because sometimes looking at our good decisions can show us what we actually value, which is different from what we think we should value.`;
       }
     }
     
     // Third exchange and beyond - continue building on their responses
     else if (messageCount >= 3 && messageCount <= 6) {
-      // Handle repetition complaints first
-      if (response.includes('asked') || response.includes('already') || response.includes('repeat') || response.includes('same')) {
-        acknowledgment = "I hear you - let me move to a different topic. ";
-        // Skip ahead in the question sequence
-        const skipAheadQuestions = [
-          "Looking at the bigger picture, what does 'financial freedom' mean to you personally?",
-          "If we could work on one small money habit together that would make your life easier, where would you want to start?",
-          "What's something about money that you learned the hard way?",
-          "When you think about your financial future, what excites you most?"
-        ];
-        nextQuestion = skipAheadQuestions[Math.min(messageCount - 3, skipAheadQuestions.length - 1)];
+      const contextualStart = generateContextualAcknowledgment(response);
+      
+      if (messageCount === 3) {
+        conversationFlow = `${contextualStart}I'm starting to get a sense of your relationship with money - there's clearly more complexity here than meets the eye.
+        
+        Let me ask you something that might sound a bit philosophical: when you think about the bigger picture, what does 'financial freedom' actually mean to you? Not the textbook definition, but YOUR definition.
+        
+        Because I find that people have such different visions of what they're actually working toward, and that vision shapes everything else.`;
+      } else if (messageCount === 4) {
+        conversationFlow = `${contextualStart}That gives me such good insight into what motivates you.
+        
+        Now I'm curious about where some of these money patterns might have started. Growing up, how did the people around you - family, friends, whoever raised you - influence how you think about money today?
+        
+        Sometimes we don't realize how much those early messages are still running in the background of our financial decisions.`;
+      } else if (messageCount === 5) {
+        conversationFlow = `${contextualStart}It's fascinating how those family influences stick with us, isn't it?
+        
+        Let me ask you about the flip side now: was there a time when you made a money choice that didn't sit well with you afterward? What do you think led to that decision?
+        
+        I'm not asking to judge - we all have those moments. I'm curious because sometimes our "mistakes" teach us more about ourselves than our successes do.`;
       } else {
-        // Keep acknowledging and diving deeper
-        acknowledgment = generateContextualAcknowledgment(response);
+        conversationFlow = `${contextualStart}Thank you for being so thoughtful and honest in this conversation.
         
-        // Choose from remaining relevant questions in sequence
-        const remainingQuestions = [
-          "Looking at the bigger picture, what does 'financial freedom' mean to you personally?",
-          "Growing up, how did the people around you (family, friends) influence how you think about money today?",
-          "Was there a money choice you made that didn't sit well with you — what do you think led to that?",
-          "If we could work on one small money habit together that would make your life easier, where would you want to start?"
-        ];
+        If we could work together on one small money habit that would make your life noticeably easier, where would you want to start? What feels most important or doable right now?
         
-        nextQuestion = remainingQuestions[Math.min(messageCount - 3, remainingQuestions.length - 1)];
+        I'm thinking something concrete and specific, not a huge overhaul.`;
       }
     }
     
     // Final exchange - wrap up
     else if (messageCount >= 7) {
-      acknowledgment = generateContextualAcknowledgment(response);
-      acknowledgment += "This conversation has been so genuine and revealing. I feel like I'm really starting to understand your unique relationship with money - your hopes, your challenges, the way you think about the future. ";
+      const contextualStart = generateContextualAcknowledgment(response);
+      conversationFlow = `${contextualStart}This conversation has been so genuine and revealing. I feel like I'm really starting to understand your unique relationship with money - your hopes, your challenges, the way you think about the future.
+      
+      Let me take a moment to put together some personalized insights based on everything you've shared. I think you might be surprised by what patterns I've noticed...`;
       
       // Trigger final insights
       setTimeout(() => {
@@ -487,11 +495,9 @@ const FinancialTherapyPlatform = () => {
           }));
         }, 500); // Shorter delay
       }, 1500);
-      
-      return acknowledgment + "Let me take a moment to put together some personalized insights based on everything you've shared. I think you might be surprised by what patterns I've noticed...";
     }
     
-    return acknowledgment + nextQuestion;
+    return conversationFlow;
   };
 
   // Generate contextual acknowledgments based on what user said

@@ -383,72 +383,52 @@ const FinancialTherapyPlatform = () => {
 
   // Sequential conversation that always moves forward - no more repetition!
   const getDynamicConversationResponse = (userResponse, messageCount) => {
-    console.log(`🎯 Conversation - Message count: ${messageCount}, User response: "${userResponse}"`);
+    console.log(`🎯 CONVERSATION DEBUG - Message count: ${messageCount}, User response: "${userResponse}"`);
+    console.log(`🎯 Array index will be: ${messageCount - 1}`);
     
-    // Simple sequence - each message gets a specific question
-    const questions = [
-      // Message 1: Ask about their money goal
-      () => {
-        const response = userResponse.toLowerCase();
-        if (response.includes('stress') || response.includes('anxiety') || response.includes('overwhelm')) {
-          return `I hear that stress. What's one money goal that would help you stress less?`;
-        } else if (response.includes('good') || response.includes('confident') || response.includes('stable')) {
-          return `That's awesome! What's your next big money goal?`;
-        } else {
-          return `Got it. What's one money goal you'd love to achieve this year?`;
-        }
-      },
-      
-      // Message 2: Ask about ideal lifestyle
-      () => `I love that ambition! What would your ideal lifestyle look like in 5 years?`,
-      
-      // Message 3: Ask about dream purchase
-      () => `That vision sounds amazing! What's one thing you'd splurge on if money wasn't a concern?`,
-      
-      // Message 4: Ask about obstacles
-      () => `Nice choice! What do you think is holding you back from that dream life right now?`,
-      
-      // Message 5: Ask about one change
-      () => `That makes sense. If you could change one thing about your money situation tomorrow, what would it be?`,
-      
-      // Message 6: Ask about motivation
-      () => `Perfect! What motivates you most to get your finances on track?`,
-      
-      // Message 7: Wrap up
-      () => {
-        // Trigger final insights
-        setTimeout(() => {
-          console.log('🎯 Triggering final insights generation...');
-          try {
-            generateLifestyleAnalysis();
-          } catch (error) {
-            console.error('❌ Error generating insights:', error);
-          }
-          
-          setTimeout(() => {
-            console.log('🎯 Setting showConversationResults to true');
-            setShowConversationResults(true);
-            setUserJourney(prev => ({
-              ...prev,
-              hasCompletedConversation: true,
-              currentStep: 'profile'
-            }));
-          }, 500);
-        }, 1500);
-        
-        return `Love that drive! Let me create your personalized financial insights...`;
-      }
+    // Define all questions upfront - each index corresponds to message count
+    const questionSequence = [
+      `Got it. What's one money goal you'd love to achieve this year?`,                              // Message 1
+      `I love that ambition! What would your ideal lifestyle look like in 5 years?`,                // Message 2  
+      `That vision sounds amazing! What's one thing you'd splurge on if money wasn't a concern?`,    // Message 3
+      `Nice choice! What do you think is holding you back from that dream life right now?`,          // Message 4
+      `That makes sense. If you could change one thing about your money situation tomorrow, what would it be?`, // Message 5
+      `Perfect! What motivates you most to get your finances on track?`,                             // Message 6
+      `Love that drive! Let me create your personalized financial insights...`                       // Message 7 (final)
     ];
     
-    // Get the question for this message count (array is 0-indexed)
-    const questionFunction = questions[messageCount - 1];
+    // Get the question for this message count (subtract 1 for array index)
+    const questionIndex = messageCount - 1;
+    console.log(`🎯 Getting question at index ${questionIndex}: "${questionSequence[questionIndex]}"`);
     
-    if (questionFunction) {
-      return questionFunction();
-    } else {
-      // Fallback - shouldn't happen but just in case
-      return `This has been so helpful. Let me create your personalized report...`;
+    // Handle final message special case
+    if (messageCount >= 7) {
+      console.log('🎯 Final message - triggering insights generation');
+      // Trigger final insights
+      setTimeout(() => {
+        console.log('🎯 Triggering final insights generation...');
+        try {
+          generateLifestyleAnalysis();
+        } catch (error) {
+          console.error('❌ Error generating insights:', error);
+        }
+        
+        setTimeout(() => {
+          console.log('🎯 Setting showConversationResults to true');
+          setShowConversationResults(true);
+          setUserJourney(prev => ({
+            ...prev,
+            hasCompletedConversation: true,
+            currentStep: 'profile'
+          }));
+        }, 500);
+      }, 1500);
+      
+      return questionSequence[6]; // Always return the final message
     }
+    
+    // Return the question for current message count
+    return questionSequence[questionIndex] || `This has been so helpful. Let me create your personalized report...`;
   };
 
   // Generate contextual acknowledgments based on what user said

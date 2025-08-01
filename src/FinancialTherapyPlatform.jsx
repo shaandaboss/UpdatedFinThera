@@ -192,9 +192,9 @@ const FinancialTherapyPlatform = () => {
                 // Clear input and generate conversational response
                 setChatInput('');
                 
-                setTimeout(() => {
-                  // Generate structured conversation response
-                  const therapistMessage = getDynamicConversationResponse(finalMessage, newCount);
+                setTimeout(async () => {
+                  // Generate AI-powered conversation response
+                  const therapistMessage = await getDynamicConversationResponse(finalMessage, newCount);
                   
                   const therapistResponse = {
                     type: 'therapist',
@@ -381,32 +381,19 @@ const FinancialTherapyPlatform = () => {
     }
   ];
 
-  // Sequential conversation that always moves forward - no more repetition!
-  const getDynamicConversationResponse = (userResponse, messageCount) => {
-    console.log(`🎯 CONVERSATION DEBUG - Message count: ${messageCount}, User response: "${userResponse}"`);
-    console.log(`🎯 Array index will be: ${messageCount - 1}`);
+  // AI-powered conversation using OpenAI Chat Completion API
+  const getDynamicConversationResponse = async (userResponse, messageCount) => {
+    console.log(`🤖 AI CONVERSATION - Message count: ${messageCount}, User response: "${userResponse}"`);
     
-    // Define all questions upfront - each index corresponds to message count
-    const questionSequence = [
-      `Got it. What's one money goal you'd love to achieve this year?`,                              // Message 1
-      `I love that ambition! What would your ideal lifestyle look like in 5 years?`,                // Message 2  
-      `That vision sounds amazing! What's one thing you'd splurge on if money wasn't a concern?`,    // Message 3
-      `Nice choice! What do you think is holding you back from that dream life right now?`,          // Message 4
-      `That makes sense. If you could change one thing about your money situation tomorrow, what would it be?`, // Message 5
-      `Perfect! What motivates you most to get your finances on track?`,                             // Message 6
-      `Love that drive! Let me create your personalized financial insights...`                       // Message 7 (final)
-    ];
+    if (!apiKey) {
+      console.warn('🤖 No API key available for AI conversation');
+      return `I'd love to continue our conversation, but I need an API key to provide personalized responses.`;
+    }
     
-    // Get the question for this message count (subtract 1 for array index)
-    const questionIndex = messageCount - 1;
-    console.log(`🎯 Getting question at index ${questionIndex}: "${questionSequence[questionIndex]}"`);
-    
-    // Handle final message special case
+    // Check if we should wrap up the conversation (after 6-8 exchanges)
     if (messageCount >= 7) {
-      console.log('🎯 Final message - triggering insights generation');
-      // Trigger final insights
+      console.log('🤖 Conversation complete - triggering insights generation');
       setTimeout(() => {
-        console.log('🎯 Triggering final insights generation...');
         try {
           generateLifestyleAnalysis();
         } catch (error) {
@@ -414,7 +401,6 @@ const FinancialTherapyPlatform = () => {
         }
         
         setTimeout(() => {
-          console.log('🎯 Setting showConversationResults to true');
           setShowConversationResults(true);
           setUserJourney(prev => ({
             ...prev,
@@ -424,11 +410,75 @@ const FinancialTherapyPlatform = () => {
         }, 500);
       }, 1500);
       
-      return questionSequence[6]; // Always return the final message
+      return `This has been such an insightful conversation! Let me create your personalized financial analysis based on everything you've shared...`;
     }
     
-    // Return the question for current message count
-    return questionSequence[questionIndex] || `This has been so helpful. Let me create your personalized report...`;
+    // Build conversation history for context
+    const conversationHistory = Object.entries(conversationResponses)
+      .sort(([a], [b]) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]))
+      .map(([key, response]) => response)
+      .join('\n\nUser: ');
+    
+    const systemPrompt = `You are a warm, empathetic financial therapist talking to a young adult. Your goal is to understand their relationship with money through natural conversation.
+
+Guidelines:
+- Keep responses to 1-2 sentences maximum
+- Ask ONE follow-up question that builds naturally on their response
+- Sound like a supportive friend who's genuinely curious
+- Focus on their goals, dreams, obstacles, and motivations
+- Be encouraging and non-judgmental
+- After 6-8 total exchanges, you'll wrap up for their personalized report
+
+Previous conversation:
+User: ${conversationHistory}
+User: ${userResponse}
+
+Respond naturally as their financial therapist:`;
+
+    try {
+      console.log('🤖 Making OpenAI API call...');
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            }
+          ],
+          max_tokens: 150,
+          temperature: 0.8
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0]?.message?.content?.trim();
+      
+      console.log('🤖 AI Response received:', aiResponse);
+      return aiResponse || "That's really interesting. Tell me more about what drives that feeling.";
+      
+    } catch (error) {
+      console.error('🤖 AI API Error:', error);
+      // Fallback to ensure conversation continues
+      const fallbackResponses = [
+        "That's really insightful. What would achieving that goal mean to you?",
+        "I can hear the passion in that. What's motivating you most right now?",
+        "That makes so much sense. What do you think is your biggest obstacle?",
+        "I love that vision! What would make the biggest difference in getting there?",
+        "That's such an honest perspective. What change would excite you most?",
+        "You're being so thoughtful about this. What drives you to improve your finances?"
+      ];
+      return fallbackResponses[Math.min(messageCount - 1, fallbackResponses.length - 1)];
+    }
   };
 
   // Generate contextual acknowledgments based on what user said
@@ -471,9 +521,9 @@ const FinancialTherapyPlatform = () => {
     // Parse financial data from user response
     parseFinancialData(chatInput, newCount);
 
-    setTimeout(() => {
-      // Generate structured conversation response
-      const therapistMessage = getDynamicConversationResponse(chatInput, newCount);
+    setTimeout(async () => {
+      // Generate AI-powered conversation response
+      const therapistMessage = await getDynamicConversationResponse(chatInput, newCount);
       
       const therapistResponse = {
         type: 'therapist',

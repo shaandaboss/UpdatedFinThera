@@ -391,35 +391,15 @@ const FinancialTherapyPlatform = () => {
     // First response - deeply acknowledge and explore their feelings
     if (messageCount === 1) {
       if (response.includes('stress') || response.includes('anxiety') || response.includes('overwhelm') || response.includes('worried')) {
-        conversationFlow = `I can really hear that stress in what you're sharing. Money anxiety is so much more than just numbers, isn't it? It's this constant background hum that affects how you sleep, how you make decisions, even how you feel about yourself.
-
-        When you say ${userResponse.includes('stress') ? 'stressed' : userResponse.includes('anxiety') ? 'anxious' : 'overwhelmed'}, what does that actually feel like in your body? Like, is it that tight chest feeling when bills come in, or more like your brain just won't stop calculating and recalculating?
-
-        I'm asking because money stress shows up so differently for everyone, and understanding YOUR specific version of it helps me understand what kind of relief you're really looking for.`;
+        conversationFlow = `I hear that stress. Where do you feel it most - in your chest, your head, or somewhere else?`;
       } else if (response.includes('confused') || response.includes('complicated') || response.includes('lost') || response.includes('don\'t know')) {
-        conversationFlow = `That feeling of confusion around money is so relatable, and honestly? It makes total sense. Personal finance advice is everywhere, but it's often generic and doesn't fit your actual life.
-
-        When you say you feel ${userResponse.includes('confused') ? 'confused' : userResponse.includes('lost') ? 'lost' : 'like you don\'t know'}, what specifically feels unclear? Is it like... you know you should be doing "something" with your money but you're not sure what? Or is it more that you've tried different approaches and none of them stick?
-
-        Because there's a big difference between "I don't know where to start" and "I've tried things but they don't work for me." And I want to meet you where you actually are.`;
+        conversationFlow = `That confusion makes total sense - money advice is everywhere but rarely fits real life. What feels most unclear to you right now?`;
       } else if (response.includes('good') || response.includes('fine') || response.includes('stable') || response.includes('confident')) {
-        conversationFlow = `That's really wonderful to hear! There's something so grounding about feeling ${userResponse.includes('confident') ? 'confident' : 'stable'} with money. It sounds like you've found some things that work for you.
-
-        I'm curious though - when you say you feel ${response.includes('good') ? 'good' : response.includes('confident') ? 'confident' : 'stable'}, what does that actually look like day-to-day? Like, is it that you sleep well knowing your bills are handled, or more that you feel in control when making spending decisions?
-
-        And here's what I'm really wondering: even when things feel good, is there still a part of you that wonders if you could be doing better, or optimizing somehow? Because a lot of people who feel "fine" with money still have this nagging sense they might be missing something.`;
+        conversationFlow = `That's great to hear! What does feeling ${response.includes('confident') ? 'confident' : 'good'} with money actually look like for you day-to-day?`;
       } else if (response.includes('frustrated') || response.includes('angry') || response.includes('annoyed')) {
-        conversationFlow = `I can feel that frustration coming through, and honestly? Good. I'm glad you're not just accepting whatever isn't working. Frustration often means you know something needs to change but you haven't found the right approach yet.
-
-        When you think about what's making you feel ${userResponse.includes('angry') ? 'angry' : 'frustrated'}, is it more about the money itself, or about your relationship with it? Like, are you frustrated because there's not enough money, or because money feels like this constant source of decisions and stress?
-
-        Because I've noticed people get frustrated with money for really different reasons. Some people are mad at the system, some are mad at themselves, and some are just tired of thinking about it all the time. Where do you land in that?`;
+        conversationFlow = `I can feel that frustration - and honestly, good for you for not just accepting what isn't working. What's making you most ${userResponse.includes('angry') ? 'angry' : 'frustrated'} about money right now?`;
       } else {
-        conversationFlow = `Thank you for sharing that with me. I can tell there's a lot more depth to how you're feeling about money than just those few words.
-
-        You know what I find interesting? Most people, when they first think about their relationship with money, they give me the "surface level" answer - the thing they think they're supposed to say, or the most obvious feeling. But then when we dig a little deeper, there's usually this whole other layer underneath.
-
-        So let me ask you this: if you had to describe not just how you feel about money, but how money makes you feel about yourself... what would that sound like? Because that's often where the real conversation starts.`;
+        conversationFlow = `I can tell there's more depth here than just those few words. What's your biggest money worry keeping you up at night?`;
       }
     }
     
@@ -427,29 +407,13 @@ const FinancialTherapyPlatform = () => {
     else if (messageCount === 2) {
       // Build on their first response
       if (response.includes('tight') || response.includes('body') || response.includes('chest') || response.includes('brain')) {
-        conversationFlow = `Yes, exactly! You really get how this shows up physically. That mind-body connection with money is so real and so overlooked.
-        
-        I'm wondering - when you have those moments where your brain won't stop calculating or your chest gets tight, what usually brings you back to feeling more grounded? Is it talking it through with someone, or doing something with your hands, or maybe just getting really practical and making a list?
-        
-        Because I think understanding what already works for you, even in small ways, can help us figure out how to make the whole money thing feel more manageable.`;
+        conversationFlow = `Yes, exactly! What usually helps you feel more grounded when that physical stress hits?`;
       } else if (response.includes('don\'t know') || response.includes('different') || response.includes('unclear')) {
-        conversationFlow = `That's such an honest answer, and it tells me you're really thinking about this, not just giving the automatic response. 
-        
-        Here's what I'm curious about: when you're making everyday money decisions - like whether to grab coffee out or make it at home, or whether to buy something online you've been wanting - what does that internal conversation sound like? 
-        
-        Do you find yourself overthinking those small choices, or do you make them pretty automatically and then maybe second-guess later?`;
+        conversationFlow = `That's such an honest answer. When you're making small money decisions - like coffee or online purchases - do you overthink them or decide quickly and then second-guess?`;
       } else if (response.includes('sleep') || response.includes('control') || response.includes('decisions')) {
-        conversationFlow = `That sense of being in control is so valuable. It sounds like you've found some strategies that actually work for you, which honestly puts you ahead of a lot of people.
-        
-        I'm curious though - and this might sound like a weird question - but do you ever feel like the "good" feeling about money comes with its own pressure? Like, now that you've got things somewhat figured out, do you worry about messing it up?
-        
-        Because I've noticed that people who feel in control sometimes carry this invisible weight of having to maintain that control perfectly.`;
+        conversationFlow = `That sense of control is so valuable. Do you ever worry about messing up what you've got figured out?`;
       } else {
-        conversationFlow = `I can hear there's more to this story. Money brings up so many different feelings for people, and they're usually all tangled up together.
-        
-        Let me ask you something that might help us dig a little deeper: think about the last time you made a money decision that you felt really good about afterward. Not necessarily a big decision - could be anything. What made that one feel right?
-        
-        I'm asking because sometimes looking at our good decisions can show us what we actually value, which is different from what we think we should value.`;
+        conversationFlow = `I can hear there's more to this story. Tell me about a recent money decision you felt really good about - what made it feel right?`;
       }
     }
     
@@ -458,38 +422,20 @@ const FinancialTherapyPlatform = () => {
       const contextualStart = generateContextualAcknowledgment(response);
       
       if (messageCount === 3) {
-        conversationFlow = `${contextualStart}I'm starting to get a sense of your relationship with money - there's clearly more complexity here than meets the eye.
-        
-        Let me ask you something that might sound a bit philosophical: when you think about the bigger picture, what does 'financial freedom' actually mean to you? Not the textbook definition, but YOUR definition.
-        
-        Because I find that people have such different visions of what they're actually working toward, and that vision shapes everything else.`;
+        conversationFlow = `${contextualStart}Got it. What does 'financial freedom' actually mean to you personally?`;
       } else if (messageCount === 4) {
-        conversationFlow = `${contextualStart}That gives me such good insight into what motivates you.
-        
-        Now I'm curious about where some of these money patterns might have started. Growing up, how did the people around you - family, friends, whoever raised you - influence how you think about money today?
-        
-        Sometimes we don't realize how much those early messages are still running in the background of our financial decisions.`;
+        conversationFlow = `${contextualStart}That's really insightful. How did your family talk about money when you were growing up?`;
       } else if (messageCount === 5) {
-        conversationFlow = `${contextualStart}It's fascinating how those family influences stick with us, isn't it?
-        
-        Let me ask you about the flip side now: was there a time when you made a money choice that didn't sit well with you afterward? What do you think led to that decision?
-        
-        I'm not asking to judge - we all have those moments. I'm curious because sometimes our "mistakes" teach us more about ourselves than our successes do.`;
+        conversationFlow = `${contextualStart}Those family patterns really stick with us. Tell me about a money decision you regret - what led to it?`;
       } else {
-        conversationFlow = `${contextualStart}Thank you for being so thoughtful and honest in this conversation.
-        
-        If we could work together on one small money habit that would make your life noticeably easier, where would you want to start? What feels most important or doable right now?
-        
-        I'm thinking something concrete and specific, not a huge overhaul.`;
+        conversationFlow = `${contextualStart}Thanks for being so honest. If you could change one small money habit, what would make the biggest difference?`;
       }
     }
     
     // Final exchange - wrap up
     else if (messageCount >= 7) {
       const contextualStart = generateContextualAcknowledgment(response);
-      conversationFlow = `${contextualStart}This conversation has been so genuine and revealing. I feel like I'm really starting to understand your unique relationship with money - your hopes, your challenges, the way you think about the future.
-      
-      Let me take a moment to put together some personalized insights based on everything you've shared. I think you might be surprised by what patterns I've noticed...`;
+      conversationFlow = `${contextualStart}This has been so insightful. Let me pull together some personalized insights based on what you've shared...`;
       
       // Trigger final insights
       setTimeout(() => {

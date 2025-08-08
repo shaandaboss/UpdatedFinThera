@@ -1,5 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import voiceService from './services/voiceService.js';
+import voiceService from './services/voiceService';
+import ConversationPage from './ConversationPage';
+import ConversationPageWithAgent from './ConversationPageWithAgent';
+import ActionPlanPage from './ActionPlanPage';
+import BudgetBuilderPage from './BudgetBuilderPage';
+import GoalTrackerPage from './GoalTrackerPage';
+import SavingsSetupPage from './SavingsSetupPage';
+import InvestmentEnginePage from './InvestmentEnginePage';
 
 const FinancialTherapyPlatform = () => {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -16,6 +23,14 @@ const FinancialTherapyPlatform = () => {
   const [conversationResponses, setConversationResponses] = useState({});
   const [showConversationResults, setShowConversationResults] = useState(false);
   const [personalizedInsights, setPersonalizedInsights] = useState([]);
+  const [completedConversationData, setCompletedConversationData] = useState(null);
+  const [completedTherapistNotes, setCompletedTherapistNotes] = useState([]);
+  const [completedInsights, setCompletedInsights] = useState({});
+  const [budgetData, setBudgetData] = useState(null);
+  const [goalData, setGoalData] = useState(null);
+  const [savingsData, setSavingsData] = useState(null);
+  const [investmentData, setInvestmentData] = useState(null);
+  const [useElevenLabsAgent, setUseElevenLabsAgent] = useState(true); // Toggle for ElevenLabs agent
   const [isRecording, setIsRecording] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -23,6 +38,7 @@ const FinancialTherapyPlatform = () => {
   const [voiceProvider, setVoiceProvider] = useState('openai');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
   const [selectedVoice, setSelectedVoice] = useState('nova');
+  const [archivedDropdownOpen, setArchivedDropdownOpen] = useState(false);
   
   // Scenarios page state
   const [selectedScenario, setSelectedScenario] = useState(null);
@@ -32,6 +48,7 @@ const FinancialTherapyPlatform = () => {
   const currentAudioRef = useRef(null);
   const currentTranscriptRef = useRef('');
   const isManualStopRef = useRef(false);
+  const chatContainerRef = useRef(null);
 
   // Initialize voice service with API key on mount
   useEffect(() => {
@@ -40,10 +57,34 @@ const FinancialTherapyPlatform = () => {
     }
   }, [apiKey]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (archivedDropdownOpen && !event.target.closest('.archived-dropdown')) {
+        setArchivedDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [archivedDropdownOpen]);
+
+
   const [wellnessRings, setWellnessRings] = useState({
     safety: { progress: 45, goal: 100, color: 'from-orange-400 to-orange-600' },
     freedom: { progress: 25, goal: 100, color: 'from-white to-gray-300' },
     fulfillment: { progress: 70, goal: 100, color: 'from-yellow-400 to-yellow-600' }
+  });
+
+  // Progress tracking state
+  const [journeyProgress, setJourneyProgress] = useState({
+    conversationDepth: 0,
+    financialClarityScore: 0,
+    goalsIdentified: 0,
+    actionableInsights: 0,
+    overallCompletion: 0
   });
 
   const [showReflectionPrompt, setShowReflectionPrompt] = useState(false);
@@ -104,18 +145,25 @@ const FinancialTherapyPlatform = () => {
 
 
 
-  // Initialize therapeutic conversation
+  // Initialize financial advisor conversation
   useEffect(() => {
     if (currentPage === 'conversation' && chatMessages.length === 0) {
       setChatMessages([
         {
           type: 'therapist',
-          message: "Hi there! I'm really glad you're here. I'm genuinely curious about your relationship with money - not to judge or lecture, just to understand. So let me start with this: when you think about your financial life right now, what feelings come up for you?",
+          message: "Hi! I'm here to help you understand your financial situation and create a personalized plan. Let's start with the basics - what's your current monthly income?",
           timestamp: new Date()
         }
       ]);
     }
   }, [currentPage]);
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   // Initialize voice functionality
   useEffect(() => {
@@ -187,14 +235,39 @@ const FinancialTherapyPlatform = () => {
                 setConversationResponses(updatedResponses);
                 
                 // Parse financial data from user response
-                parseFinancialData(finalMessage, newCount);
+                const financialUpdates = parseFinancialData(finalMessage, newCount);
+                const hasFinancialData = Object.keys(financialUpdates).length > 0;
+                
+                // Update journey progress
+                updateJourneyProgress(finalMessage, hasFinancialData);
                 
                 // Clear input and generate conversational response
                 setChatInput('');
                 
-                setTimeout(async () => {
-                  // Generate AI-powered conversation response
-                  const therapistMessage = await getDynamicConversationResponse(finalMessage, newCount);
+                // Check if conversation is complete (after 10 exchanges)
+                if (newCount >= 10) {
+                  setTimeout(() => {
+                    try {
+                      generateLifestyleAnalysis();
+                    } catch (error) {
+                      console.error('❌ Error generating insights:', error);
+                    }
+                    
+                    setTimeout(() => {
+                      setShowConversationResults(true);
+                      setUserJourney(prev => ({
+                        ...prev,
+                        hasCompletedConversation: true,
+                        currentStep: 'profile'
+                      }));
+                    }, 1000);
+                  }, 1500);
+                  return; // Don't continue with normal flow
+                }
+                
+                setTimeout(() => {
+                  // Generate sequential conversation response
+                  const therapistMessage = getSequentialResponse(finalMessage, newCount);
                   
                   const therapistResponse = {
                     type: 'therapist',
@@ -382,113 +455,7 @@ const FinancialTherapyPlatform = () => {
   ];
 
   // AI-powered conversation using OpenAI Chat Completion API
-  const getDynamicConversationResponse = async (userResponse, messageCount) => {
-    console.log(`🤖 AI CONVERSATION - Message count: ${messageCount}, User response: "${userResponse}"`);
-    
-    if (!apiKey) {
-      console.warn('🤖 No API key available for AI conversation');
-      return `I'd love to continue our conversation, but I need an API key to provide personalized responses.`;
-    }
-    
-    // Check if we should wrap up the conversation (after 6-8 exchanges)
-    if (messageCount >= 7) {
-      console.log('🤖 Conversation complete - triggering insights generation');
-      setTimeout(() => {
-        try {
-          generateLifestyleAnalysis();
-        } catch (error) {
-          console.error('❌ Error generating insights:', error);
-        }
-        
-        setTimeout(() => {
-          setShowConversationResults(true);
-          setUserJourney(prev => ({
-            ...prev,
-            hasCompletedConversation: true,
-            currentStep: 'profile'
-          }));
-        }, 500);
-      }, 1500);
-      
-      return `This has been such an insightful conversation! Let me create your personalized financial analysis based on everything you've shared...`;
-    }
-    
-    // Build conversation history for context
-    const conversationHistory = Object.entries(conversationResponses)
-      .sort(([a], [b]) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]))
-      .map(([key, response]) => response)
-      .join('\n\nUser: ');
-    
-    const systemPrompt = `You are a warm, empathetic financial therapist talking to a young adult. Your goal is to understand their relationship with money through natural, flowing conversation that encourages deep sharing.
-
-Guidelines:
-- Keep responses to 1-2 sentences maximum
-- Ask ONE open-ended follow-up question that invites exploration and storytelling
-- Use question starters like "What's...", "How do you...", "Tell me about...", "Walk me through...", "What goes through your mind when..."
-- NEVER ask yes/no questions - always invite them to elaborate and explore their thoughts
-- Encourage stream-of-consciousness responses where they can ramble and share freely
-- Sound like a curious friend who wants to understand their inner world with money
-- Focus on feelings, dreams, obstacles, motivations, and what drives them
-- Let them share as much detail as they want - rich responses lead to better insights
-
-Question examples that work well:
-- "What goes through your mind when you think about your financial future?"
-- "Walk me through what your ideal financial life looks like."
-- "Tell me about what excites you most about money and what you could do with it."
-- "How do you feel when you imagine having complete financial freedom?"
-- "What's the story behind that feeling about money?"
-
-Previous conversation:
-User: ${conversationHistory}
-User: ${userResponse}
-
-Respond naturally as their financial therapist, encouraging them to open up:`;
-
-    try {
-      console.log('🤖 Making OpenAI API call...');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            }
-          ],
-          max_tokens: 150,
-          temperature: 0.8
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const aiResponse = data.choices[0]?.message?.content?.trim();
-      
-      console.log('🤖 AI Response received:', aiResponse);
-      return aiResponse || "That's really interesting. Tell me more about what drives that feeling.";
-      
-    } catch (error) {
-      console.error('🤖 AI API Error:', error);
-      // Fallback to ensure conversation continues with open-ended questions
-      const fallbackResponses = [
-        "That's really insightful. Tell me more about what that goal represents to you.",
-        "I can hear the passion in that. What's the story behind what drives you with money?",
-        "That makes so much sense. Walk me through what's going through your mind about your financial situation.",
-        "I love that vision! What does your ideal financial life actually look like day-to-day?",
-        "That's such an honest perspective. How do you feel when you think about your financial future?",
-        "You're being so thoughtful about this. What excites you most about getting your finances on track?"
-      ];
-      return fallbackResponses[Math.min(messageCount - 1, fallbackResponses.length - 1)];
-    }
-  };
+  // OLD FUNCTION REMOVED - Now using getSequentialResponse for reliable conversation flow
 
   // Generate contextual acknowledgments based on what user said
   const generateContextualAcknowledgment = (response) => {
@@ -507,6 +474,7 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
 
 
   const sendMessage = () => {
+    console.log('📝 Send message triggered with input:', chatInput);
     if (!chatInput.trim()) return;
 
     const newUserMessage = {
@@ -515,11 +483,13 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
       timestamp: new Date()
     };
 
+    console.log('👤 Adding user message:', newUserMessage);
     setChatMessages(prev => [...prev, newUserMessage]);
 
     // Update conversation count and store response
     const newCount = conversationCount + 1;
     setConversationCount(newCount);
+    console.log('📊 New conversation count:', newCount);
     
     const updatedResponses = {
       ...conversationResponses,
@@ -528,21 +498,146 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
     setConversationResponses(updatedResponses);
     
     // Parse financial data from user response
-    parseFinancialData(chatInput, newCount);
+    const financialUpdates = parseFinancialData(chatInput, newCount);
+    const hasFinancialData = Object.keys(financialUpdates).length > 0;
+    console.log('💰 Financial data parsed:', hasFinancialData, financialUpdates);
+    
+    // Update journey progress
+    updateJourneyProgress(chatInput, hasFinancialData);
 
-    setTimeout(async () => {
-      // Generate AI-powered conversation response
-      const therapistMessage = await getDynamicConversationResponse(chatInput, newCount);
-      
-      const therapistResponse = {
-        type: 'therapist',
-        message: therapistMessage,
-        timestamp: new Date()
-      };
-      setChatMessages(prev => [...prev, therapistResponse]);
-    }, 1500);
+    // Check if conversation is complete (after 10 exchanges)
+    if (newCount >= 10) {
+      console.log('🎯 Conversation complete! Generating results...');
+      setTimeout(() => {
+        try {
+          generateLifestyleAnalysis();
+        } catch (error) {
+          console.error('❌ Error generating insights:', error);
+        }
+        
+        setTimeout(() => {
+          setShowConversationResults(true);
+          setUserJourney(prev => ({
+            ...prev,
+            hasCompletedConversation: true,
+            currentStep: 'profile'
+          }));
+        }, 1000);
+      }, 1500);
+      setChatInput('');
+      return; // Don't continue with normal flow
+    }
+
+    // Generate immediate sequential response
+    console.log('🤖 About to generate sequential response...');
+    console.log('🤖 Current conversation count:', conversationCount);
+    console.log('🤖 New count will be:', newCount);
+    console.log('🤖 User input:', chatInput);
+    
+    setTimeout(() => {
+      console.log('🤖 Timeout reached, calling getSequentialResponse...');
+      try {
+        const therapistMessage = getSequentialResponse(chatInput, newCount);
+        console.log('🤖 Sequential response received:', therapistMessage);
+        
+        if (!therapistMessage) {
+          console.error('❌ No message returned from getSequentialResponse!');
+          return;
+        }
+        
+        const therapistResponse = {
+          type: 'therapist',
+          message: therapistMessage,
+          timestamp: new Date()
+        };
+        console.log('🤖 Adding therapist response to chat:', therapistResponse);
+        setChatMessages(prev => [...prev, therapistResponse]);
+        console.log('🤖 Chat messages updated successfully');
+      } catch (error) {
+        console.error('❌ Error in sequential response generation:', error);
+        // Fallback response
+        const fallbackResponse = {
+          type: 'therapist',
+          message: "Thanks for sharing that. Can you tell me more about your financial situation?",
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, fallbackResponse]);
+      }
+    }, 800);
 
     setChatInput('');
+  };
+
+  // Structured conversation system based on FinThera outline
+  const getSequentialResponse = (userInput, messageCount) => {
+    console.log('🔍 getSequentialResponse called with:', { userInput, messageCount });
+    const lowerInput = userInput.toLowerCase();
+    console.log('🔍 Lower input:', lowerInput);
+    
+    // Natural conversation flow based on your structured outline
+    console.log('🔍 Entering switch statement with messageCount:', messageCount);
+    switch (messageCount) {
+      case 1:
+        // Phase 1: After warm-up feelings question -> Current Situation
+        console.log('🔍 Case 1 - Current situation exploration');
+        return "That gives me great insight into your mindset. Let's talk about your day-to-day life - what does a typical week look like for you right now? I'm curious about your routine, work, and how you spend your time.";
+        
+      case 2:
+        // Section A: Daily life -> Financial responsibilities
+        console.log('🔍 Case 2 - Financial responsibilities');
+        return "Thanks for sharing that! Now I'm curious - are there any big financial responsibilities you're focusing on right now? Maybe rent, student loans, family support, or saving for something specific?";
+        
+      case 3:
+        // Section A: Financial responsibilities -> Money management feelings
+        console.log('🔍 Case 3 - Money management feelings');
+        return "I appreciate your honesty about that. How do you feel about managing your money at this stage in life? Are you feeling confident, overwhelmed, curious to learn more, or somewhere in between?";
+        
+      case 4:
+        // Section B: Money attitudes -> Decision-making approach
+        console.log('🔍 Case 4 - Decision-making patterns');
+        return "That's really insightful. When you have to make big financial decisions - like a major purchase or choosing where to live - how do you usually approach them? Do you research extensively, go with your gut, ask others for advice?";
+        
+      case 5:
+        // Section B: Decision-making -> Money relationship
+        console.log('🔍 Case 5 - Money relationship');
+        return "I love learning about how people think through decisions. Here's a deeper question - do you see money as a source of stress, freedom, security, or something else entirely? What's your gut reaction to that?";
+        
+      case 6:
+        // Section C: Dream life exploration begins
+        console.log('🔍 Case 6 - Dream life introduction');
+        return "That's such an honest perspective. Now let's dream a little - if money wasn't a concern at all, what would your ideal life look like? Think about where you'd live, how you'd spend your days, what experiences you'd have.";
+        
+      case 7:
+        // Section C: Dream life -> Specific lifestyle details
+        console.log('🔍 Case 7 - Lifestyle specifics');
+        return "That sounds amazing! Let's get specific about your dream lifestyle. What kind of home appeals to you? And what about travel - are you someone who dreams of exploring the world, or do you prefer staying closer to home with occasional getaways?";
+        
+      case 8:
+        // Section C: Home/travel -> Activities and experiences
+        console.log('🔍 Case 8 - Activities and experiences');
+        return "I can really picture that lifestyle! What kind of activities and experiences would fill your ideal days? Think about hobbies, social life, personal growth, or ways you'd want to contribute to the world.";
+        
+      case 9:
+        // Section C: Final dream question -> Retirement vision
+        console.log('🔍 Case 9 - Retirement vision');
+        return "That all sounds so fulfilling. Here's my final question - at what point in life would you love to have the freedom to stop working if you wanted to? Not that you'd necessarily stop, but when would you want that financial freedom to choose?";
+        
+      case 10:
+        // Wrap up and generate report
+        console.log('🔍 Case 10 - Wrapping up conversation');
+        return "This has been such a rich conversation! Thank you for sharing your dreams and being so open about your relationship with money. Let me analyze everything you've shared and create your personalized FinThera report. This will just take a moment...";
+        
+      default:
+        console.log('🔍 Default case reached - messageCount not matching any cases:', messageCount);
+        // Fallback for any edge cases
+        if (messageCount <= 0) {
+          console.log('🔍 Message count <= 0, returning income question');
+          return "Hi! I'm here to help you understand your financial situation. What's your current monthly income?";
+        } else {
+          console.log('🔍 Message count > 10, wrapping up conversation');
+          return "Thank you for sharing all of that with me. Let me create your personalized financial analysis based on our wonderful conversation.";
+        }
+    }
   };
 
   // Analysis functions
@@ -826,32 +921,149 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
     }
   };
 
-  // Financial data parsing function
+  // Enhanced financial data parsing with smart feedback
   const parseFinancialData = (text, messageCount) => {
     const lowerText = text.toLowerCase();
     let updates = {};
+    let smartFeedback = [];
     
-    // Parse income mentions
-    const incomeRegex = /(?:make|earn|income|salary)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|per year|annually|year|monthly|month|per month)?/gi;
-    let match = incomeRegex.exec(lowerText);
-    if (match) {
-      let amount = parseFloat(match[1].replace(/,/g, ''));
-      if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
-      if (lowerText.includes('month') && !lowerText.includes('year')) amount *= 12;
-      updates.currentIncome = amount;
+    console.log(`🔍 parseFinancialData called for message ${messageCount}: "${text}"`);
+    
+    // For the new conversation format, try to infer financial information from lifestyle descriptions
+    if (messageCount >= 1) {
+      // Try to infer income level from lifestyle descriptions
+      if (lowerText.includes('comfortable') || lowerText.includes('well') || lowerText.includes('stable job')) {
+        updates.currentIncome = updates.currentIncome || 75000; // Slightly above default
+      } else if (lowerText.includes('tight') || lowerText.includes('struggling') || lowerText.includes('paycheck to paycheck')) {
+        updates.currentIncome = updates.currentIncome || 45000; // Below default
+      } else if (lowerText.includes('luxury') || lowerText.includes('high income') || lowerText.includes('well paid')) {
+        updates.currentIncome = updates.currentIncome || 120000; // Well above default
+      }
+      
+      // Try to infer savings/debt from financial stress mentions
+      if (lowerText.includes('debt') || lowerText.includes('student loan') || lowerText.includes('credit card')) {
+        if (lowerText.includes('a lot') || lowerText.includes('high') || lowerText.includes('heavy')) {
+          updates.monthlyDebtPayment = updates.monthlyDebtPayment || 1200;
+        }
+      }
+      
+      // Try to infer financial goals from dream descriptions
+      if (lowerText.includes('house') || lowerText.includes('home') || lowerText.includes('buy')) {
+        updates.financialGoals = { ...updates.financialGoals, buyHome: true };
+      }
+      if (lowerText.includes('travel') || lowerText.includes('explore') || lowerText.includes('adventure')) {
+        updates.financialGoals = { ...updates.financialGoals, travel: true };
+      }
+      if (lowerText.includes('retire') || lowerText.includes('freedom') || lowerText.includes('financial independence')) {
+        updates.financialGoals = { ...updates.financialGoals, earlyRetirement: true };
+      }
     }
     
-    // Parse expenses mentions
-    const expenseRegex = /(?:spend|expenses|cost|pay)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|per month|monthly|month|year|annually)?/gi;
-    match = expenseRegex.exec(lowerText);
-    if (match) {
-      let amount = parseFloat(match[1].replace(/,/g, ''));
-      if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
-      if (lowerText.includes('year') && !lowerText.includes('month')) amount /= 12;
-      updates.monthlyExpenses = amount;
+    // Enhanced income parsing with multiple patterns
+    const incomePatterns = [
+      /(?:monthly income|income per month|make per month|earn per month)(?:\s+is|\s+of)?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/gi,
+      /(?:make|earn|income|salary)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|per year|annually|year|monthly|month|per month)/gi,
+      /\$(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:per month|monthly|a month)/gi,
+      /(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:dollars|bucks)?\s*(?:per month|monthly|a month)/gi
+    ];
+    
+    for (const pattern of incomePatterns) {
+      const match = pattern.exec(lowerText);
+      if (match) {
+        let amount = parseFloat(match[1].replace(/,/g, ''));
+        if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
+        
+        // Convert to annual if monthly is specified
+        if (lowerText.includes('month') || lowerText.includes('monthly')) {
+          updates.currentIncome = amount * 12;
+        } else if (lowerText.includes('year') || lowerText.includes('annual')) {
+          updates.currentIncome = amount;
+        } else {
+          // Default assumption: if number is < 10000, it's likely monthly
+          updates.currentIncome = amount < 10000 ? amount * 12 : amount;
+        }
+        
+        // Generate smart income feedback like LifeCashFlowPlanner
+        const annualIncome = updates.currentIncome;
+        if (annualIncome < 30000) {
+          smartFeedback.push({
+            type: 'income',
+            message: "Starting out strong! Every financial journey begins with that first step. Focus on building skills that increase your earning potential.",
+            tone: 'encouraging'
+          });
+        } else if (annualIncome >= 30000 && annualIncome < 60000) {
+          smartFeedback.push({
+            type: 'income',
+            message: "You're in a solid earning range! This is a great foundation to build your financial security on.",
+            tone: 'positive'
+          });
+        } else if (annualIncome >= 60000 && annualIncome < 100000) {
+          smartFeedback.push({
+            type: 'income',
+            message: "That's an impressive income level! You're in a position to really accelerate your financial goals.",
+            tone: 'impressed'
+          });
+        } else if (annualIncome >= 100000) {
+          smartFeedback.push({
+            type: 'income',
+            message: "Wow, that's an ambitious and achievable income! You have tremendous potential for wealth building.",
+            tone: 'amazed'
+          });
+        }
+        
+        break;
+      }
     }
     
-    // Parse debt mentions
+    // Enhanced expenses parsing with multiple patterns  
+    const expensePatterns = [
+      /(?:monthly expenses|expenses per month|spend per month)(?:\s+are|\s+is)?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/gi,
+      /(?:total expenses|total spending)(?:\s+are|\s+is)?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:per month|monthly)/gi,
+      /(?:spend|expenses|cost)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|per month|monthly|month|year|annually)/gi
+    ];
+    
+    for (const pattern of expensePatterns) {
+      const match = pattern.exec(lowerText);
+      if (match) {
+        let amount = parseFloat(match[1].replace(/,/g, ''));
+        if (lowerText.includes('k') || lowerText.includes('thousand')) amount *= 1000;
+        
+        // Convert to monthly
+        if (lowerText.includes('year') || lowerText.includes('annual')) {
+          updates.monthlyExpenses = amount / 12;
+        } else {
+          updates.monthlyExpenses = amount; // Assume monthly by default
+        }
+        
+        // Generate smart expense feedback
+        if (updates.currentIncome) {
+          const expenseRatio = updates.monthlyExpenses / (updates.currentIncome / 12);
+          if (expenseRatio > 0.8) {
+            smartFeedback.push({
+              type: 'expense',
+              message: "Those expenses are quite high relative to income. Let's explore some areas where you might find savings opportunities.",
+              tone: 'concerned'
+            });
+          } else if (expenseRatio > 0.5 && expenseRatio <= 0.8) {
+            smartFeedback.push({
+              type: 'expense',
+              message: "Your spending is in a reasonable range, but there's room to optimize for faster wealth building.",
+              tone: 'neutral'
+            });
+          } else {
+            smartFeedback.push({
+              type: 'expense',
+              message: "Excellent expense management! You're living well below your means - that's the key to financial freedom.",
+              tone: 'impressed'
+            });
+          }
+        }
+        
+        break;
+      }
+    }
+    
+    // Parse debt mentions with smart feedback
     const debtRegex = /(?:debt|owe|loan|borrowed)(?:\s+(?:about|around|roughly))?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand)?/gi;
     match = debtRegex.exec(lowerText);
     if (match) {
@@ -861,12 +1073,40 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
       // Categorize debt type
       if (lowerText.includes('student') || lowerText.includes('college') || lowerText.includes('school')) {
         updates['debt.student'] = amount;
+        smartFeedback.push({
+          type: 'debt',
+          message: `Student loans are an investment in your future! At $${amount.toLocaleString()}, focus on income growth while managing payments strategically.`,
+          tone: 'supportive'
+        });
       } else if (lowerText.includes('credit') || lowerText.includes('card')) {
         updates['debt.credit'] = amount;
+        if (amount > 10000) {
+          smartFeedback.push({
+            type: 'debt',
+            message: "Credit card debt can be challenging, but you've got this! Focus on paying this off aggressively - it's costing you a lot in interest.",
+            tone: 'urgent'
+          });
+        } else {
+          smartFeedback.push({
+            type: 'debt',
+            message: "Your credit card debt is manageable. With focus, you can knock this out quickly!",
+            tone: 'encouraging'
+          });
+        }
       } else if (lowerText.includes('car') || lowerText.includes('auto') || lowerText.includes('vehicle')) {
         updates['debt.car'] = amount;
+        smartFeedback.push({
+          type: 'debt',
+          message: "Car loans are pretty normal - just make sure you're not overpaying for transportation relative to your income.",
+          tone: 'neutral'
+        });
       } else if (lowerText.includes('mortgage') || lowerText.includes('house') || lowerText.includes('home')) {
         updates['debt.mortgage'] = amount;
+        smartFeedback.push({
+          type: 'debt',
+          message: "A mortgage is good debt - you're building equity! Real estate can be a powerful wealth-building tool.",
+          tone: 'positive'
+        });
       } else {
         updates['debt.other'] = amount;
       }
@@ -916,7 +1156,87 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
       updates['financialGoals.payOffDebt'] = true;
     }
     
+    // Update financial profile if we have updates
+    if (Object.keys(updates).length > 0) {
+      setFinancialProfile(prev => {
+        const newProfile = { ...prev };
+        Object.entries(updates).forEach(([key, value]) => {
+          if (key.includes('.')) {
+            const [parentKey, childKey] = key.split('.');
+            if (!newProfile[parentKey]) newProfile[parentKey] = {};
+            newProfile[parentKey][childKey] = value;
+          } else {
+            newProfile[key] = value;
+          }
+        });
+        return newProfile;
+      });
+    }
+    
+    // Display smart feedback if we have any
+    if (smartFeedback.length > 0) {
+      smartFeedback.forEach((feedback, index) => {
+        setTimeout(() => {
+          setChatMessages(prev => [...prev, {
+            type: 'smart-feedback',
+            message: feedback.message,
+            feedbackType: feedback.type,
+            tone: feedback.tone,
+            timestamp: new Date()
+          }]);
+        }, 800 + (index * 400)); // Stagger multiple feedback messages
+      });
+    }
+    
+    console.log(`🔍 parseFinancialData returning:`, updates);
     return updates;
+  };
+  
+  // Update progress tracking based on conversation activity
+  const updateJourneyProgress = (messageContent, financialDataFound) => {
+    setJourneyProgress(prev => {
+      const newProgress = { ...prev };
+      
+      // Update conversation depth based on message length and content richness
+      const wordCount = messageContent.split(' ').length;
+      if (wordCount > 20) newProgress.conversationDepth = Math.min(prev.conversationDepth + 8, 100);
+      else if (wordCount > 10) newProgress.conversationDepth = Math.min(prev.conversationDepth + 5, 100);
+      
+      // Update financial clarity based on financial data mentions
+      if (financialDataFound) {
+        newProgress.financialClarityScore = Math.min(prev.financialClarityScore + 15, 100);
+      }
+      
+      // Update goals identified based on goal-related keywords
+      const goalKeywords = ['want', 'goal', 'dream', 'hope', 'future', 'plan', 'save', 'buy', 'retire'];
+      const hasGoalContent = goalKeywords.some(keyword => messageContent.toLowerCase().includes(keyword));
+      if (hasGoalContent) {
+        newProgress.goalsIdentified = Math.min(prev.goalsIdentified + 10, 100);
+      }
+      
+      // Calculate overall completion
+      newProgress.overallCompletion = Math.round(
+        (newProgress.conversationDepth + newProgress.financialClarityScore + newProgress.goalsIdentified) / 3
+      );
+      
+      return newProgress;
+    });
+    
+    // Update wellness rings based on progress
+    setWellnessRings(prev => ({
+      safety: { 
+        ...prev.safety, 
+        progress: Math.min(prev.safety.progress + (financialDataFound ? 3 : 1), 100)
+      },
+      freedom: { 
+        ...prev.freedom, 
+        progress: Math.min(prev.freedom.progress + 2, 100)
+      },
+      fulfillment: { 
+        ...prev.fulfillment, 
+        progress: Math.min(prev.fulfillment.progress + 1, 100)
+      }
+    }));
   };
   
   // Calculate comprehensive financial metrics
@@ -1047,20 +1367,26 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
   };
 
   const generateLifestyleAnalysis = () => {
+    console.log('🚀 generateLifestyleAnalysis starting...');
     const responses = conversationResponses;
     const allResponsesText = Object.values(responses).filter(Boolean).join(' ').toLowerCase();
     
     console.log('🔍 Generating insights with responses:', responses);
     console.log('🔍 All text:', allResponsesText);
+    console.log('🔍 Financial profile:', financialProfile);
     
     // Parse financial data from all responses
     let parsedData = {};
+    console.log('🔍 Parsing financial data from responses...');
     Object.values(responses).forEach((response, index) => {
       if (response) {
+        console.log(`🔍 Parsing response ${index + 1}:`, response);
         const data = parseFinancialData(response, index + 1);
+        console.log(`🔍 Parsed data from response ${index + 1}:`, data);
         parsedData = { ...parsedData, ...data };
       }
     });
+    console.log('🔍 All parsed financial data:', parsedData);
     
     // Calculate comprehensive financial metrics
     const metrics = calculateFinancialMetrics(financialProfile);
@@ -1127,6 +1453,11 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
     // Debt payoff timeline
     const debtPayoffYears = metrics.totalDebt > 0 ? Math.ceil(metrics.totalDebt / metrics.monthlyDebtPayment / 12) : 0;
     
+    // Calculate estimated monthly waste (spending that could be redirected)
+    // This is a conservative estimate based on typical spending patterns
+    const monthlyWaste = Math.max(0, Math.round(metrics.monthlyIncome * 0.15)); // Estimate 15% redirectable spending
+    const yearlyWaste = monthlyWaste * 12;
+    
     return {
       monthlyBalance,
       yearlyBalance,
@@ -1140,11 +1471,377 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
       savingsRate: metrics.savingsRate,
       debtToIncomeRatio: metrics.debtToIncomeRatio,
       totalDebt: metrics.totalDebt,
-      monthlyIncome: metrics.monthlyIncome
+      monthlyIncome: metrics.monthlyIncome,
+      monthlyWaste,
+      yearlyWaste
     };
   };
 
   // Wellness Rings component
+  // Handle conversation completion
+  const handleConversationComplete = (conversationData, therapistNotes, currentInsights) => {
+    console.log('🎯 Conversation completed with data:', conversationData);
+    console.log('🎯 Therapist notes:', therapistNotes);
+    console.log('🎯 Current insights:', currentInsights);
+    
+    // Store the conversation responses and completion data
+    setConversationResponses(conversationData);
+    setCompletedConversationData(conversationData);
+    setCompletedTherapistNotes(therapistNotes);
+    setCompletedInsights(currentInsights);
+    
+    // Generate insights from the conversation, enhanced with therapist notes
+    try {
+      generateLifestyleAnalysisFromData(conversationData, therapistNotes, currentInsights);
+    } catch (error) {
+      console.error('❌ Error generating insights:', error);
+    }
+    
+    // Route to action plan instead of results
+    setTimeout(() => {
+      setCurrentPage('actionplan');
+      setUserJourney(prev => ({
+        ...prev,
+        hasCompletedConversation: true,
+        currentStep: 'actionplan'
+      }));
+    }, 1000);
+  };
+
+  // Generate lifestyle analysis from conversation data
+  const generateLifestyleAnalysisFromData = (data, therapistNotes = [], currentInsights = {}) => {
+    console.log('🚀 generateLifestyleAnalysisFromData starting...');
+    console.log('🚀 Using therapist insights:', currentInsights);
+    
+    // Use therapist insights for enhanced archetype detection
+    const archetype = currentInsights.archetype 
+      ? determineFinancialArchetypeFromInsights(currentInsights)
+      : determineFinancialArchetype(data);
+    
+    // Estimate lifestyle costs from dream descriptions
+    const lifestyleCosts = calculateLifestyleCosts(data);
+    
+    // Calculate retirement projection
+    const retirementProjection = calculateRetirementProjection(data, lifestyleCosts);
+    
+    // Create structured insights based on new report format
+    const insights = [
+      {
+        category: "Current Financial Snapshot",
+        title: "Where You Stand Today",
+        description: generateCurrentSnapshotDescription(data),
+        deepInsight: "Understanding your current relationship with money is the foundation for making meaningful changes.",
+        actionItems: []
+      },
+      {
+        category: "Your Financial Archetype",
+        title: archetype.title,
+        description: archetype.description,
+        deepInsight: archetype.deepInsight,
+        actionItems: archetype.actionItems,
+        traits: archetype.traits,
+        strengths: archetype.strengths,
+        challenges: archetype.challenges
+      },
+      {
+        category: "Dream Lifestyle Cost Analysis",
+        title: `Estimated Annual Cost: $${lifestyleCosts.total.toLocaleString()}`,
+        description: generateLifestyleCostDescription(data, lifestyleCosts),
+        deepInsight: "Breaking down your dream life into real numbers makes it feel more achievable.",
+        actionItems: [],
+        costBreakdown: lifestyleCosts.breakdown
+      },
+      {
+        category: "Retirement Projection",
+        title: `Potential Retirement Age: ${retirementProjection.age}`,
+        description: retirementProjection.description,
+        deepInsight: "This is an estimate based on your current path - small changes can make a big difference.",
+        actionItems: retirementProjection.actionItems
+      }
+    ];
+    
+    setPersonalizedInsights(insights);
+    console.log('🔍 Generated structured insights:', insights);
+  };
+
+  // Determine financial archetype based on conversation responses
+  const determineFinancialArchetype = (data) => {
+    const responses = Object.values(data).join(' ').toLowerCase();
+    
+    // Analyze responses for key patterns
+    const isSecurityFocused = responses.includes('security') || responses.includes('safe') || responses.includes('stable');
+    const isFreedomFocused = responses.includes('freedom') || responses.includes('independence') || responses.includes('choice');
+    const isExperienceFocused = responses.includes('travel') || responses.includes('experience') || responses.includes('adventure');
+    const isStressFocused = responses.includes('stress') || responses.includes('worry') || responses.includes('anxious');
+    const isMethodical = responses.includes('research') || responses.includes('plan') || responses.includes('analyze');
+    
+    if (isFreedomFocused && isMethodical) {
+      return {
+        title: "The Strategic Freedom Builder",
+        description: "You see money as a tool for ultimate independence and approach financial decisions thoughtfully.",
+        deepInsight: "Your combination of long-term vision and careful planning puts you on a strong path to financial freedom.",
+        traits: ["Goal-oriented", "Strategic thinker", "Values independence", "Future-focused"],
+        strengths: ["Clear vision of desired outcome", "Willing to make sacrifices for long-term goals", "Thinks before acting"],
+        challenges: ["May delay gratification too much", "Could miss present-moment opportunities", "Risk of over-analyzing decisions"],
+        actionItems: [
+          "Set up automatic investing to make progress effortless",
+          "Calculate your 'freedom number' - the amount needed for financial independence",
+          "Schedule quarterly reviews to stay on track without daily worry"
+        ]
+      };
+    } else if (isExperienceFocused) {
+      return {
+        title: "The Experience Collector",
+        description: "You understand that money's true value lies in the memories and experiences it can create.",
+        deepInsight: "Your focus on experiences over things often leads to greater life satisfaction and happiness.",
+        traits: ["Present-focused", "Values experiences", "Spontaneous", "Relationship-oriented"],
+        strengths: ["Lives life fully", "Creates meaningful memories", "Flexible and adaptable"],
+        challenges: ["May struggle with long-term savings", "Could underestimate future needs", "Impulse spending tendencies"],
+        actionItems: [
+          "Create an 'Experience Fund' for guilt-free adventure spending",
+          "Use travel rewards credit cards to maximize experience value",
+          "Automate savings so future you can also have great experiences"
+        ]
+      };
+    } else if (isSecurityFocused) {
+      return {
+        title: "The Security Builder",
+        description: "You prioritize financial stability and peace of mind above all else.",
+        deepInsight: "Your focus on security provides a solid foundation that allows for calculated risks later.",
+        traits: ["Risk-averse", "Values stability", "Methodical", "Conservative"],
+        strengths: ["Builds strong emergency funds", "Avoids dangerous debt", "Steady progress"],
+        challenges: ["May be too conservative with investments", "Could miss growth opportunities", "Analysis paralysis"],
+        actionItems: [
+          "Consider low-risk index funds for better long-term growth",
+          "Build emergency fund first, then explore higher returns",
+          "Start with small investment amounts to build confidence"
+        ]
+      };
+    } else if (isStressFocused) {
+      return {
+        title: "The Mindful Worrier",
+        description: "You're deeply aware of money's emotional impact and want to create a healthier relationship with it.",
+        deepInsight: "Your financial anxiety shows you care deeply - channeling this into action creates positive change.",
+        traits: ["Emotionally aware", "Seeks understanding", "Cautious", "Thoughtful"],
+        strengths: ["High emotional intelligence", "Motivated to improve", "Considers all angles"],
+        challenges: ["Overthinking financial decisions", "Stress about money impacts daily life", "May avoid dealing with finances"],
+        actionItems: [
+          "Start with small, manageable financial wins to build confidence",
+          "Create a simple tracking system to reduce unknowns",
+          "Practice the '24-hour rule' for purchases over $100"
+        ]
+      };
+    } else {
+      return {
+        title: "The Balanced Explorer",
+        description: "You're thoughtfully exploring your relationship with money and discovering what works best for you.",
+        deepInsight: "Your openness to learning and balanced approach will serve you well as you develop your financial strategy.",
+        traits: ["Open-minded", "Balanced", "Learning-oriented", "Flexible"],
+        strengths: ["Willing to learn and adapt", "Considers multiple perspectives", "Not locked into rigid thinking"],
+        challenges: ["May lack clear direction", "Could benefit from more structure", "Needs to build confidence"],
+        actionItems: [
+          "Start with basic automated savings and investing",
+          "Experiment with different approaches to find your style",
+          "Set one clear financial goal to build momentum"
+        ]
+      };
+    }
+  };
+
+  // Create enhanced archetype from therapist insights
+  const determineFinancialArchetypeFromInsights = (insights) => {
+    const baseArchetype = {
+      title: insights.archetype || "The Balanced Explorer",
+      description: "",
+      deepInsight: "",
+      traits: insights.keyTraits || [],
+      strengths: [],
+      challenges: [],
+      actionItems: []
+    };
+
+    // Customize based on therapist observations
+    switch(insights.archetype) {
+      case 'The Mindful Worrier':
+        return {
+          ...baseArchetype,
+          description: "You're deeply aware of money's emotional impact and want to create a healthier relationship with it.",
+          deepInsight: "Your financial awareness shows you care deeply - this emotional intelligence is actually a superpower for making good money decisions.",
+          strengths: ["High emotional intelligence", "Motivated to improve", "Thoughtful decision-maker"],
+          challenges: ["May overthink decisions", "Stress can impact daily life", "Tendency to avoid financial tasks"],
+          actionItems: [
+            "Start with small, manageable financial wins to build confidence",
+            "Create a simple tracking system to reduce unknowns",
+            "Practice the '24-hour rule' for purchases over $100"
+          ]
+        };
+      
+      case 'The Strategic Freedom Builder':
+        return {
+          ...baseArchetype,
+          description: "You see money as a tool for ultimate independence and approach financial decisions thoughtfully.",
+          deepInsight: "Your combination of long-term vision and analytical thinking puts you on a strong path to financial freedom.",
+          strengths: ["Clear long-term vision", "Strategic thinking", "Research-focused approach"],
+          challenges: ["May delay gratification too much", "Could miss present opportunities", "Analysis paralysis risk"],
+          actionItems: [
+            "Set up automatic investing to make progress effortless",
+            "Calculate your 'freedom number' for financial independence",
+            "Schedule quarterly reviews instead of daily monitoring"
+          ]
+        };
+
+      case 'The Experience Collector':
+        return {
+          ...baseArchetype,
+          description: "You understand that money's true value lies in the memories and experiences it can create.",
+          deepInsight: "Your focus on experiences over things often leads to greater life satisfaction and happiness.",
+          strengths: ["Lives life fully", "Values meaningful experiences", "Present-focused enjoyment"],
+          challenges: ["May struggle with long-term savings", "Could underestimate future needs", "Impulse spending tendencies"],
+          actionItems: [
+            "Create an 'Experience Fund' for guilt-free adventure spending",
+            "Use travel rewards credit cards to maximize experience value",
+            "Automate savings so future you can also have great experiences"
+          ]
+        };
+
+      default:
+        return baseArchetype;
+    }
+  };
+
+  // Calculate estimated lifestyle costs based on dream descriptions
+  const calculateLifestyleCosts = (data) => {
+    const responses = Object.values(data).join(' ').toLowerCase();
+    
+    let housingCost = 60000; // Base housing cost
+    let travelCost = 15000;  // Base travel cost
+    let experiencesCost = 12000; // Base experiences cost
+    let livingCost = 40000;  // Base living expenses
+    
+    // Adjust based on lifestyle descriptions
+    if (responses.includes('luxury') || responses.includes('high-end') || responses.includes('expensive')) {
+      housingCost *= 1.5;
+      travelCost *= 1.8;
+      experiencesCost *= 1.6;
+      livingCost *= 1.4;
+    } else if (responses.includes('simple') || responses.includes('modest') || responses.includes('basic')) {
+      housingCost *= 0.8;
+      travelCost *= 0.7;
+      experiencesCost *= 0.8;
+      livingCost *= 0.9;
+    }
+    
+    // Adjust for travel frequency
+    if (responses.includes('travel') && (responses.includes('often') || responses.includes('frequently') || responses.includes('world'))) {
+      travelCost *= 1.5;
+    }
+    
+    // Adjust for experience preferences
+    if (responses.includes('hobbies') || responses.includes('activities') || responses.includes('experiences')) {
+      experiencesCost *= 1.3;
+    }
+    
+    const total = housingCost + travelCost + experiencesCost + livingCost;
+    
+    return {
+      total: Math.round(total),
+      breakdown: {
+        housing: Math.round(housingCost),
+        travel: Math.round(travelCost),
+        experiences: Math.round(experiencesCost),
+        living: Math.round(livingCost)
+      }
+    };
+  };
+
+  // Calculate retirement projection
+  const calculateRetirementProjection = (data, lifestyleCosts) => {
+    const responses = Object.values(data).join(' ').toLowerCase();
+    
+    // Extract retirement desires from responses
+    let targetAge = 65; // Default retirement age
+    
+    if (responses.includes('early') || responses.includes('50') || responses.includes('young')) {
+      targetAge = 55;
+    } else if (responses.includes('60')) {
+      targetAge = 60;
+    } else if (responses.includes('never') || responses.includes('love work')) {
+      targetAge = 70;
+    }
+    
+    // Calculate required savings based on lifestyle costs
+    const annualNeed = lifestyleCosts.total;
+    const retirementFund = annualNeed * 25; // 4% rule
+    
+    // Estimate current savings rate and project
+    const assumedIncome = 75000; // Default assumption, could be enhanced
+    const assumedSavingsRate = 0.15; // 15% savings rate assumption
+    const annualSavings = assumedIncome * assumedSavingsRate;
+    
+    // Simple projection with 7% annual return
+    const yearsToRetirement = Math.log(1 + (retirementFund * 0.07) / annualSavings) / Math.log(1.07);
+    const projectedAge = Math.round(30 + yearsToRetirement); // Assuming current age ~30
+    
+    return {
+      age: Math.min(projectedAge, 75), // Cap at reasonable age
+      description: `Based on your dream lifestyle and current financial path, you could potentially achieve financial independence around age ${Math.min(projectedAge, 75)}. This assumes a ${(assumedSavingsRate * 100).toFixed(0)}% savings rate and 7% annual investment returns.`,
+      actionItems: [
+        `Target retirement fund needed: $${retirementFund.toLocaleString()} (based on your dream lifestyle)`,
+        `If you save $${Math.round(annualSavings / 12).toLocaleString()}/month and invest wisely, you're on track`,
+        "Remember: This is an estimate - small changes in savings rate can dramatically impact timeline"
+      ]
+    };
+  };
+
+  // Generate current financial snapshot description
+  const generateCurrentSnapshotDescription = (data) => {
+    const responses = Object.values(data);
+    const feelingsResponse = responses[0] || '';
+    const dailyLifeResponse = responses[1] || '';
+    const responsibilitiesResponse = responses[2] || '';
+    
+    let description = "Based on our conversation, you're ";
+    
+    // Analyze feelings about money
+    if (feelingsResponse.toLowerCase().includes('stress') || feelingsResponse.toLowerCase().includes('worry')) {
+      description += "navigating some financial stress, which shows you care deeply about your financial future. ";
+    } else if (feelingsResponse.toLowerCase().includes('confident') || feelingsResponse.toLowerCase().includes('good')) {
+      description += "feeling relatively confident about your financial situation, which is a great foundation to build on. ";
+    } else {
+      description += "thoughtfully exploring your relationship with money, which demonstrates healthy financial awareness. ";
+    }
+    
+    // Add context about daily life and responsibilities
+    if (responsibilitiesResponse) {
+      description += "You're currently managing various financial responsibilities while working toward your bigger goals. ";
+    }
+    
+    description += "This honest self-reflection is the first step toward making meaningful financial progress.";
+    
+    return description;
+  };
+
+  // Generate lifestyle cost description
+  const generateLifestyleCostDescription = (data, costs) => {
+    const dreamResponse = Object.values(data).slice(6).join(' '); // Dream life responses
+    
+    let description = "Your dream lifestyle ";
+    
+    if (dreamResponse.toLowerCase().includes('travel')) {
+      description += "includes significant travel and exploration, ";
+    }
+    if (dreamResponse.toLowerCase().includes('home') || dreamResponse.toLowerCase().includes('house')) {
+      description += "features your ideal living situation, ";
+    }
+    if (dreamResponse.toLowerCase().includes('experience') || dreamResponse.toLowerCase().includes('activities')) {
+      description += "prioritizes meaningful experiences and activities, ";
+    }
+    
+    description += `which translates to an estimated annual cost of $${costs.total.toLocaleString()}. This breaks down to roughly $${Math.round(costs.total / 12).toLocaleString()} per month - a concrete target to work toward.`;
+    
+    return description;
+  };
+
   const renderWellnessRings = () => {
     const rings = [
       {
@@ -1273,16 +1970,17 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
           </button>
 
           <div className="hidden md:flex items-center gap-1">
+            {/* Main Navigation Tabs */}
             {[
               { id: 'landing', label: 'Home', icon: '🏠', available: true },
               { id: 'conversation', label: 'Voice Chat', icon: '🎙️', available: true },
-              { id: 'health', label: 'Health Score', icon: '💚', available: userJourney.hasCompletedConversation },
-              { id: 'tools', label: 'Tools', icon: '🛠️', available: userJourney.hasCompletedConversation },
-              { id: 'optimization', label: 'Optimization', icon: '⚡', available: userJourney.hasCompletedConversation },
-              { id: 'scenarios', label: 'What If', icon: '🤔', available: userJourney.hasCompletedConversation },
-              { id: 'learn', label: 'Learn', icon: '📚', available: true },
-              { id: 'profile', label: 'Profile', icon: '👤', available: userJourney.hasCompletedConversation },
-              { id: 'planning', label: 'Life Plan', icon: '🎯', available: userJourney.hasSetupProfile },
+              ...(userJourney.hasCompletedConversation ? [
+                { id: 'budget-builder', label: 'Budget', icon: '💰', available: true },
+                { id: 'goal-tracker', label: 'Goals', icon: '🎯', available: true },
+                { id: 'savings-setup', label: 'Savings', icon: '💼', available: true },
+                { id: 'investment-engine', label: 'Invest', icon: '📈', available: true },
+                { id: 'dashboard', label: 'Progress', icon: '📊', available: true }
+              ] : []),
               { id: 'about', label: 'About', icon: 'ℹ️', available: true }
             ].map(({ id, label, icon, available }) => (
               <button
@@ -1300,6 +1998,71 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
                 {icon} {label}
               </button>
             ))}
+
+            {/* Archived Tabs Dropdown */}
+            <div className="relative archived-dropdown">
+              <button
+                onClick={() => setArchivedDropdownOpen(!archivedDropdownOpen)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                  ['health', 'tools', 'optimization', 'scenarios', 'learn', 'profile', 'planning'].includes(currentPage)
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg'
+                    : 'text-white/80 hover:text-white hover:bg-black/90'
+                }`}
+              >
+                Archived Tabs
+                <svg className={`w-4 h-4 transition-transform ${archivedDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              {archivedDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-72 bg-black/95 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl z-50 overflow-hidden">
+                  <div className="p-3">
+                    <div className="px-4 py-2 text-xs font-semibold text-white/50 uppercase tracking-wider border-b border-white/10 mb-2">
+                      Legacy Features
+                    </div>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'health', label: 'Health Score', icon: '💚', available: userJourney.hasCompletedConversation, description: 'View your financial wellness score' },
+                        { id: 'tools', label: 'Tools', icon: '🛠️', available: userJourney.hasCompletedConversation, description: 'Financial calculators and utilities' },
+                        { id: 'optimization', label: 'Optimization', icon: '⚡', available: userJourney.hasCompletedConversation, description: 'Optimize your financial strategy' },
+                        { id: 'scenarios', label: 'What If', icon: '🤔', available: userJourney.hasCompletedConversation, description: 'Explore different scenarios' },
+                        { id: 'learn', label: 'Learn', icon: '📚', available: true, description: 'Financial education resources' },
+                        { id: 'profile', label: 'Profile', icon: '👤', available: userJourney.hasCompletedConversation, description: 'Manage your financial profile' },
+                        { id: 'planning', label: 'Life Plan', icon: '🎯', available: userJourney.hasSetupProfile, description: 'Long-term financial planning' }
+                      ].map(({ id, label, icon, available, description }) => (
+                        <button
+                          key={id}
+                          onClick={() => {
+                            if (available) {
+                              setCurrentPage(id);
+                              setArchivedDropdownOpen(false);
+                            }
+                          }}
+                          disabled={!available}
+                          className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-start gap-3 ${
+                            currentPage === id
+                              ? 'bg-orange-500 text-white'
+                              : available
+                                ? 'text-white hover:text-white hover:bg-white/10'
+                                : 'text-white/30 cursor-not-allowed'
+                          }`}
+                        >
+                          <span className="text-lg mt-0.5">{icon}</span>
+                          <div className="flex-1">
+                            <div className="font-medium">{label}</div>
+                            <div className="text-xs mt-0.5 text-white/60">
+                              {description}
+                            </div>
+                          </div>
+                          {!available && <span className="text-xs opacity-50 mt-1">Locked</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="md:hidden">
@@ -1315,16 +2078,17 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
         {mobileMenuOpen && (
           <div className="md:hidden bg-black/90 border-t border-white/20 py-4">
             <div className="flex flex-col space-y-2">
+              {/* Main Mobile Navigation */}
               {[
                 { id: 'landing', label: 'Home', icon: '🏠', available: true },
                 { id: 'conversation', label: 'Voice Chat', icon: '🎙️', available: true },
-                { id: 'health', label: 'Health Score', icon: '💚', available: userJourney.hasCompletedConversation },
-                { id: 'tools', label: 'Tools', icon: '🛠️', available: userJourney.hasCompletedConversation },
-                { id: 'optimization', label: 'Optimization', icon: '⚡', available: userJourney.hasCompletedConversation },
-                { id: 'scenarios', label: 'What If', icon: '🤔', available: userJourney.hasCompletedConversation },
-                { id: 'learn', label: 'Learn', icon: '📚', available: true },
-                { id: 'profile', label: 'Profile', icon: '👤', available: userJourney.hasCompletedConversation },
-                { id: 'planning', label: 'Life Plan', icon: '🎯', available: userJourney.hasSetupProfile },
+                ...(userJourney.hasCompletedConversation ? [
+                  { id: 'budget-builder', label: 'Budget', icon: '💰', available: true },
+                  { id: 'goal-tracker', label: 'Goals', icon: '🎯', available: true },
+                  { id: 'savings-setup', label: 'Savings', icon: '💼', available: true },
+                  { id: 'investment-engine', label: 'Invest', icon: '📈', available: true },
+                  { id: 'dashboard', label: 'Progress', icon: '📊', available: true }
+                ] : []),
                 { id: 'about', label: 'About', icon: 'ℹ️', available: true }
               ].map(({ id, label, icon, available }) => (
                 <button
@@ -1347,6 +2111,51 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
                   {icon} {label}
                 </button>
               ))}
+
+              {/* Mobile Archived Tabs Section */}
+              <div className="border-t border-white/10 pt-4 mt-4">
+                <div className="px-4 py-2 text-xs font-semibold text-white/50 uppercase tracking-wider">
+                  Legacy Features
+                </div>
+                <div className="space-y-1">
+                  {[
+                    { id: 'health', label: 'Health Score', icon: '💚', available: userJourney.hasCompletedConversation, description: 'View your financial wellness score' },
+                    { id: 'tools', label: 'Tools', icon: '🛠️', available: userJourney.hasCompletedConversation, description: 'Financial calculators and utilities' },
+                    { id: 'optimization', label: 'Optimization', icon: '⚡', available: userJourney.hasCompletedConversation, description: 'Optimize your financial strategy' },
+                    { id: 'scenarios', label: 'What If', icon: '🤔', available: userJourney.hasCompletedConversation, description: 'Explore different scenarios' },
+                    { id: 'learn', label: 'Learn', icon: '📚', available: true, description: 'Financial education resources' },
+                    { id: 'profile', label: 'Profile', icon: '👤', available: userJourney.hasCompletedConversation, description: 'Manage your financial profile' },
+                    { id: 'planning', label: 'Life Plan', icon: '🎯', available: userJourney.hasSetupProfile, description: 'Long-term financial planning' }
+                  ].map(({ id, label, icon, available, description }) => (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        if (available) {
+                          setCurrentPage(id);
+                          setMobileMenuOpen(false);
+                        }
+                      }}
+                      disabled={!available}
+                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-start gap-3 ${
+                        currentPage === id
+                          ? 'bg-orange-500 text-white'
+                          : available
+                            ? 'text-white hover:text-white hover:bg-black/80'
+                            : 'text-white/30 cursor-not-allowed'
+                      }`}
+                    >
+                      <span className="text-base mt-0.5">{icon}</span>
+                      <div className="flex-1">
+                        <div className="font-medium">{label}</div>
+                        <div className="text-xs mt-0.5 text-white/50">
+                          {description}
+                        </div>
+                      </div>
+                      {!available && <span className="text-xs opacity-50 mt-1">Locked</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1507,8 +2316,8 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
   const renderConversationPage = () => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black">
       {showConversationResults ? renderConversationResults() : (
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="text-center mb-8">
+        <div className="max-w-8xl mx-auto p-4">
+          <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-2">
               Financial Therapy Session
             </h1>
@@ -1546,10 +2355,10 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
             </div>
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Side: Input Controls */}
-            <div className="bg-black/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+          {/* Two Column Layout with Emphasis on Conversation */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Side: Input Controls - Smaller */}
+            <div className="lg:col-span-1 bg-black/80 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
               <h2 className="text-xl font-bold text-white mb-6 text-center">Your Response</h2>
               
               {/* Voice Controls */}
@@ -1683,16 +2492,62 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
               )}
             </div>
 
-            {/* Right Side: Chat Messages */}
-            <div className="bg-black/60 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-6 text-center">Conversation</h2>
+            {/* Right Side: Chat Messages - Larger */}
+            <div className="lg:col-span-2 bg-black/60 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">Conversation</h2>
+                <div className="text-right">
+                  <div className="text-xs text-white/60">Progress</div>
+                  <div className="text-lg font-bold text-yellow-400">{journeyProgress.overallCompletion}%</div>
+                </div>
+              </div>
               
-              <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
+              {/* Progress Indicators */}
+              <div className="mb-6 space-y-2">
+                <div className="flex items-center justify-between text-xs text-white/70">
+                  <span>Conversation Depth</span>
+                  <span>{journeyProgress.conversationDepth}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-1.5">
+                  <div 
+                    className="bg-gradient-to-r from-orange-400 to-yellow-400 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${journeyProgress.conversationDepth}%` }}
+                  ></div>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-white/70">
+                  <span>Financial Clarity</span>
+                  <span>{journeyProgress.financialClarityScore}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-1.5">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-400 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${journeyProgress.financialClarityScore}%` }}
+                  ></div>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-white/70">
+                  <span>Goals Identified</span>
+                  <span>{journeyProgress.goalsIdentified}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-1.5">
+                  <div 
+                    className="bg-gradient-to-r from-purple-400 to-pink-400 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${journeyProgress.goalsIdentified}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div ref={chatContainerRef} className="max-h-[500px] overflow-y-auto pr-2 space-y-4">
                 {chatMessages.map((msg, index) => (
                   <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-sm px-4 py-3 rounded-2xl ${
+                    <div className={`max-w-lg px-5 py-4 rounded-2xl ${
                       msg.type === 'user' 
                         ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white' 
+                        : msg.type === 'smart-feedback'
+                        ? `${msg.tone === 'impressed' || msg.tone === 'amazed' ? 'bg-gradient-to-r from-green-500/20 to-blue-500/20 border-green-400/30' : 
+                             msg.tone === 'concerned' || msg.tone === 'urgent' ? 'bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-400/30' : 
+                             'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/30'} text-white border`
                         : 'bg-white/10 text-white border border-white/20'
                     }`}>
                       {msg.type === 'therapist' && (
@@ -1706,6 +2561,19 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
                               <div className="w-1 h-3 bg-yellow-400 rounded animate-pulse" style={{animationDelay: '0.4s'}}></div>
                             </div>
                           )}
+                        </div>
+                      )}
+                      {msg.type === 'smart-feedback' && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">
+                            {msg.feedbackType === 'income' ? '💰' : 
+                             msg.feedbackType === 'expense' ? '📊' : 
+                             msg.feedbackType === 'debt' ? '📋' : '💡'}
+                          </span>
+                          <span className="text-xs text-white/80 font-medium">Smart Insight</span>
+                          <div className="ml-auto">
+                            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                          </div>
                         </div>
                       )}
                       <div className="text-sm leading-relaxed">{msg.message}</div>
@@ -1732,15 +2600,43 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
 
   // Conversation Results Page
   const renderConversationResults = () => {
-    const impact = calculateFinancialImpact();
+    console.log('🎯 renderConversationResults starting...');
+    console.log('🎯 Current state - personalizedInsights:', personalizedInsights);
+    console.log('🎯 Current state - conversationResponses:', conversationResponses);
+    console.log('🎯 Current state - financialProfile:', financialProfile);
+    
+    let impact;
+    try {
+      console.log('🎯 Attempting to calculate financial impact...');
+      impact = calculateFinancialImpact();
+      console.log('🔍 Impact calculation successful:', impact);
+    } catch (error) {
+      console.error('❌ Error calculating financial impact:', error);
+      console.error('❌ Error stack:', error.stack);
+      // Fallback impact data
+      impact = {
+        monthlyWaste: 500,
+        yearlyWaste: 6000,
+        tenYearInvested: 60000,
+        monthlyBalance: 0,
+        netWorth: 0,
+        monthlyIncome: 5000,
+        totalDebt: 0,
+        emergencyFundProgress: 0
+      };
+      console.log('🔍 Using fallback impact data:', impact);
+    }
     
     console.log('🔍 Report rendering - personalizedInsights:', personalizedInsights);
     console.log('🔍 Report rendering - conversationResponses:', conversationResponses);
     
     // Always ensure we have at least basic insights
-    const insights = personalizedInsights && personalizedInsights.length > 0 ? personalizedInsights : [
-      {
-        category: "Your Conversation Summary",
+    let insights;
+    try {
+      console.log('🎯 Generating insights array...');
+      insights = personalizedInsights && personalizedInsights.length > 0 ? personalizedInsights : [
+        {
+          category: "Your Conversation Summary",
         title: "Thank You for Sharing",
         description: "You completed our financial therapy session and shared valuable insights about your relationship with money.",
         deepInsight: "Every conversation about money is a step toward better financial wellness.",
@@ -1751,165 +2647,178 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
         ]
       }
     ];
+    console.log('🎯 Successfully generated insights array:', insights);
+    } catch (error) {
+      console.error('❌ Error generating insights array:', error);
+      insights = [
+        {
+          category: "Conversation Summary",
+          title: "Thank You for Participating",
+          description: "You've completed our financial conversation. While we encountered a small technical issue, your participation is valuable.",
+          deepInsight: "Sometimes the most important part is just starting the conversation about money.",
+          actionItems: [
+            "Continue thinking about your financial goals",
+            "Consider speaking with a financial advisor",
+            "Set one small financial goal for this week"
+          ]
+        }
+      ];
+    }
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black">
         <div className="max-w-4xl mx-auto p-6 text-white">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-white">
-            Your Financial Therapy Results
-          </h1>
-          <p className="text-xl text-white/80">
-            Here's what your lifestyle choices reveal about your financial future
+        
+        {/* Cover & Intro */}
+        <div className="text-center mb-12 bg-black/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+          <h1 className="text-4xl font-bold mb-4 text-white">Your Personal Financial Report</h1>
+          <p className="text-white/80 text-lg mb-6">
+            Thank you for sharing your thoughts and dreams about money. This report reflects your unique financial personality and provides a roadmap for achieving your ideal lifestyle.
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
-            <div className="flex items-center gap-3 mb-6">
-              <h3 className="text-2xl font-bold text-white">Personal Analysis</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-white font-medium mb-2">How You Feel About Money:</div>
-                <div className="text-white/80 italic">"{conversationResponses.message_1 || 'Your honest feelings about your financial situation'}"</div>
-              </div>
-              
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-white font-medium mb-2">What Brings You Joy:</div>
-                <div className="text-white/80 italic">"{conversationResponses.message_2 || 'Decisions that made you feel good'}"</div>
-              </div>
-              
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-white font-medium mb-2">Your Goals:</div>
-                <div className="text-white/80 italic text-sm">"{conversationResponses.message_3 || 'What you want to change about your financial life'}"</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
-            <div className="flex items-center gap-3 mb-6">
-              <h3 className="text-2xl font-bold text-white">Financial Impact</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-2">${impact.monthlyWaste}</div>
-                <div className="text-white/80 text-sm">Monthly redirectable spending</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-2">${impact.yearlyWaste.toLocaleString()}</div>
-                <div className="text-white/80 text-sm">Yearly opportunity</div>
-              </div>
-              
-              <div className="bg-white/20 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-white mb-1">${impact.tenYearInvested.toLocaleString()}</div>
-                <div className="text-white/80 text-sm">If invested for 10 years at 7% return</div>
-              </div>
-            </div>
+          <div className="inline-flex items-center px-4 py-2 bg-blue-600/20 border border-blue-400/30 rounded-full text-blue-300 text-sm">
+            📊 Personalized Analysis Complete
           </div>
         </div>
 
-        {insights.length > 0 && (
-          <div className="mb-12">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-4">
-                Your Personal Insights
-              </h2>
-              <p className="text-white/80">Deep insights into your financial personality and patterns</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {insights.map((insight, index) => (
-                <div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20"
-                >
-                  <div className="mb-6">
-                    <div className="text-sm text-white/60 font-medium mb-2">{insight.category}</div>
-                    <h3 className="text-2xl font-bold text-white mb-4">{insight.title}</h3>
-                    <p className="text-white/80 leading-relaxed mb-4">{insight.description}</p>
-                    
-                    {insight.deepInsight && (
-                      <div className="bg-white/10 rounded-lg p-4 mb-4 border border-white/20">
-                        <div className="text-white font-medium mb-2 text-sm">Key Insight:</div>
-                        <p className="text-white/80 text-sm">{insight.deepInsight}</p>
-                      </div>
-                    )}
+        {/* Report Sections */}
+        <div className="space-y-8">
+          {insights.map((insight, index) => (
+            <div key={index} className="bg-black/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+              
+              {/* Section Header */}
+              <div className="mb-6">
+                <div className="text-sm text-white/60 font-medium mb-2">{insight.category}</div>
+                <h2 className="text-2xl font-bold text-white mb-4">{insight.title}</h2>
+                <p className="text-white/80 leading-relaxed mb-4">{insight.description}</p>
+                
+                {insight.deepInsight && (
+                  <div className="bg-white/10 rounded-lg p-4 mb-4 border border-white/20">
+                    <div className="text-white font-medium mb-2 text-sm">Key Insight:</div>
+                    <p className="text-white/80 text-sm">{insight.deepInsight}</p>
                   </div>
+                )}
+              </div>
 
-                  {insight.actionItems && insight.actionItems.length > 0 && (
-                    <div>
-                      <div className="text-white font-medium mb-3">Next Steps:</div>
-                      <div className="space-y-2">
-                        {insight.actionItems.map((action, actionIndex) => (
-                          <div
-                            key={actionIndex}
-                            className="flex items-start gap-3 text-sm text-white/80 bg-white/10 rounded-lg p-3"
-                          >
-                            <div className="text-white mt-0.5">•</div>
-                            <div>{action}</div>
-                          </div>
-                        ))}
+              {/* Financial Archetype Details */}
+              {insight.category === "Your Financial Archetype" && insight.traits && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div className="bg-white/10 rounded-lg p-4 border border-green-400/30">
+                    <h4 className="text-green-300 font-semibold mb-2">✨ Your Traits</h4>
+                    <ul className="text-white/80 text-sm space-y-1">
+                      {insight.traits.map((trait, i) => (
+                        <li key={i}>• {trait}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-4 border border-blue-400/30">
+                    <h4 className="text-blue-300 font-semibold mb-2">💪 Your Strengths</h4>
+                    <ul className="text-white/80 text-sm space-y-1">
+                      {insight.strengths.map((strength, i) => (
+                        <li key={i}>• {strength}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-4 border border-orange-400/30">
+                    <h4 className="text-orange-300 font-semibold mb-2">⚠️ Watch Out For</h4>
+                    <ul className="text-white/80 text-sm space-y-1">
+                      {insight.challenges.map((challenge, i) => (
+                        <li key={i}>• {challenge}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Lifestyle Cost Breakdown with Pie Chart */}
+              {insight.category === "Dream Lifestyle Cost Analysis" && insight.costBreakdown && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                  <div className="bg-white/10 rounded-lg p-6 border border-white/20">
+                    <h4 className="text-white font-semibold mb-4">💰 Annual Cost Breakdown</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/80">🏠 Housing</span>
+                        <span className="text-white font-medium">${insight.costBreakdown.housing.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/80">✈️ Travel</span>
+                        <span className="text-white font-medium">${insight.costBreakdown.travel.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/80">🎨 Experiences</span>
+                        <span className="text-white font-medium">${insight.costBreakdown.experiences.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/80">🍽️ Living Expenses</span>
+                        <span className="text-white font-medium">${insight.costBreakdown.living.toLocaleString()}</span>
+                      </div>
+                      <div className="border-t border-white/20 pt-3 mt-3">
+                        <div className="flex justify-between items-center font-semibold">
+                          <span className="text-yellow-300">Total Annual Cost</span>
+                          <span className="text-yellow-300">${(insight.costBreakdown.housing + insight.costBreakdown.travel + insight.costBreakdown.experiences + insight.costBreakdown.living).toLocaleString()}</span>
+                        </div>
+                        <div className="text-white/60 text-sm mt-1">
+                          ${Math.round((insight.costBreakdown.housing + insight.costBreakdown.travel + insight.costBreakdown.experiences + insight.costBreakdown.living) / 12).toLocaleString()}/month
+                        </div>
                       </div>
                     </div>
-                  )}
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-6 border border-white/20">
+                    <h4 className="text-white font-semibold mb-4">📊 Visual Breakdown</h4>
+                    <div className="text-center">
+                      <div className="inline-block p-4 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mb-4">
+                        <div className="text-4xl">📊</div>
+                      </div>
+                      <p className="text-white/80 text-sm">
+                        Your dream lifestyle is dominated by housing (${insight.costBreakdown.housing.toLocaleString()}) and supplemented by travel, experiences, and daily living costs.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              )}
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20 mb-12 text-center">
-          <h3 className="text-2xl font-bold text-white mb-4">Key Realization</h3>
-          <p className="text-lg text-white/80 leading-relaxed">
-            You're not broke. You're not behind. You just need to <span className="text-white font-semibold">redirect money you're already spending</span> from things that don't bring joy to things that build your future. The money is there - it's just going to the wrong places.
+              {/* Action Items */}
+              {insight.actionItems && insight.actionItems.length > 0 && (
+                <div>
+                  <div className="text-white font-medium mb-3">🎯 Next Steps:</div>
+                  <div className="space-y-2">
+                    {insight.actionItems.map((action, actionIndex) => (
+                      <div
+                        key={actionIndex}
+                        className="flex items-start gap-3 text-sm text-white/80 bg-white/10 rounded-lg p-3"
+                      >
+                        <div className="text-white mt-0.5">•</div>
+                        <div>{action}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Final Summary Section */}
+        <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-3xl p-8 border border-blue-300/20 mt-8 text-center">
+          <h3 className="text-2xl font-bold text-white mb-4">🌟 Your Financial Journey Starts Here</h3>
+          <p className="text-white/80 text-lg leading-relaxed mb-6">
+            This report is your first step toward financial clarity. You now have a concrete understanding of your financial personality, dream lifestyle costs, and retirement timeline. 
+          </p>
+          <p className="text-white/60 text-sm">
+            Remember: These projections are estimates based on your responses and general assumptions. Your actual financial journey may vary, and that's perfectly normal. The important thing is that you've started the conversation.
           </p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20 text-center">
-          <h3 className="text-2xl font-bold text-white mb-6">Your Next Steps</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white/10 rounded-lg p-6 border border-white/20">
-              <h4 className="font-bold text-white mb-2">Track for 1 Week</h4>
-              <p className="text-sm text-white/80">Notice what brings joy vs what you regret</p>
-            </div>
-
-            <div className="bg-white/10 rounded-lg p-6 border border-white/20">
-              <h4 className="font-bold text-white mb-2">Cut One Thing</h4>
-              <p className="text-sm text-white/80">Cancel one subscription or habit that doesn't spark joy</p>
-            </div>
-
-            <div className="bg-white/10 rounded-lg p-6 border border-white/20">
-              <h4 className="font-bold text-white mb-2">Redirect</h4>
-              <p className="text-sm text-white/80">Put that money toward your goal automatically</p>
-            </div>
-          </div>
-
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => setCurrentPage('profile')}
-              className="bg-white text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/90 transform hover:scale-105 transition-all"
-            >
-              Set Up Your Profile
-            </button>
-            
-            <button
-              onClick={() => {
-                setCurrentPage('landing');
-                setChatMessages([]);
-                setConversationResponses({});
-                setCurrentConversationStep('intro');
-                setShowConversationResults(false);
-              }}
-              className="bg-white/20 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/30 transform hover:scale-105 transition-all border border-white/20"
-            >
-              Start Fresh Session
-            </button>
-          </div>
+        <div className="text-center mt-8">
+          <button
+            onClick={() => {
+              setShowConversationResults(false);
+              setConversationResponses({});
+              setCurrentPage('landing');
+            }}
+            className="bg-white/20 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/30 transform hover:scale-105 transition-all border border-white/20"
+          >
+            Start New Conversation
+          </button>
         </div>
         </div>
       </div>
@@ -3645,6 +4554,56 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
   };
 
   // About Page
+  const renderActionPlanPage = () => (
+    <ActionPlanPage 
+      conversationData={completedConversationData}
+      therapistNotes={completedTherapistNotes}
+      currentInsights={completedInsights}
+      onContinue={() => setCurrentPage('budget-builder')}
+    />
+  );
+
+  const renderBudgetBuilderPage = () => (
+    <BudgetBuilderPage
+      currentInsights={completedInsights}
+      onComplete={(data) => {
+        setBudgetData(data);
+        setCurrentPage('goal-tracker');
+      }}
+    />
+  );
+
+  const renderGoalTrackerPage = () => (
+    <GoalTrackerPage
+      currentInsights={completedInsights}
+      onComplete={(data) => {
+        setGoalData(data);
+        setCurrentPage('savings-setup');
+      }}
+    />
+  );
+
+  const renderSavingsSetupPage = () => (
+    <SavingsSetupPage
+      currentInsights={completedInsights}
+      budgetData={budgetData}
+      onComplete={(data) => {
+        setSavingsData(data);
+        setCurrentPage('investment-engine');
+      }}
+    />
+  );
+
+  const renderInvestmentEnginePage = () => (
+    <InvestmentEnginePage
+      currentInsights={completedInsights}
+      onComplete={(data) => {
+        setInvestmentData(data);
+        setCurrentPage('dashboard');
+      }}
+    />
+  );
+
   const renderAboutPage = () => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-800 to-black text-white p-6">
       <div className="max-w-4xl mx-auto">
@@ -3742,7 +4701,17 @@ Respond naturally as their financial therapist, encouraging them to open up:`;
         {renderNavigation()}
         
         {currentPage === 'landing' && renderLandingPage()}
-        {currentPage === 'conversation' && renderConversationPage()}
+        {currentPage === 'conversation' && (showConversationResults ? 
+          renderConversationResults() : 
+          useElevenLabsAgent ? 
+            <ConversationPageWithAgent onComplete={handleConversationComplete} /> :
+            <ConversationPage onComplete={handleConversationComplete} />)}
+        {currentPage === 'actionplan' && renderActionPlanPage()}
+        {currentPage === 'budget-builder' && renderBudgetBuilderPage()}
+        {currentPage === 'goal-tracker' && renderGoalTrackerPage()}
+        {currentPage === 'savings-setup' && renderSavingsSetupPage()}
+        {currentPage === 'investment-engine' && renderInvestmentEnginePage()}
+        {currentPage === 'dashboard' && renderHealthPage()}
         {currentPage === 'health' && renderHealthPage()}
         {currentPage === 'tools' && renderToolsPage()}
         {currentPage === 'optimization' && renderOptimizationPage()}

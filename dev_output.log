@@ -1,0 +1,89 @@
+
+> financial-therapy-platform@1.0.0 dev
+> vite
+
+
+  VITE v4.5.14  ready in 144 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: use --host to expose
+(node:64703) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/shaankapoor/projects/FinTherapy/postcss.config.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/shaankapoor/projects/FinTherapy/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+/Users/shaankapoor/projects/FinTherapy/src/ConversationPage.jsx: Unexpected token, expected "}" (569:8)
+
+  567 |         </div>
+  568 |
+> 569 |         {/* Text Input - Fallback Option */}
+      |         ^
+  570 |         <div className="bg-black/80 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+  571 |           <div className="text-center mb-3">
+  572 |             <button
+2:38:01 AM [vite] Internal server error: /Users/shaankapoor/projects/FinTherapy/src/ConversationPage.jsx: Unexpected token, expected "}" (569:8)
+
+  567 |         </div>
+  568 |
+> 569 |         {/* Text Input - Fallback Option */}
+      |         ^
+  570 |         <div className="bg-black/80 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+  571 |           <div className="text-center mb-3">
+  572 |             <button
+  Plugin: vite:react-babel
+  File: /Users/shaankapoor/projects/FinTherapy/src/ConversationPage.jsx:569:8
+  567|          </div>
+  568|  
+  569|          {/* Text Input - Fallback Option */}
+     |          ^
+  570|          <div className="bg-black/80 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+  571|            <div className="text-center mb-3">
+      at constructor (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:367:19)
+      at JSXParserMixin.raise (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:6627:19)
+      at JSXParserMixin.unexpected (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:6647:16)
+      at JSXParserMixin.expect (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:6927:12)
+      at JSXParserMixin.jsxParseExpressionContainer (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4667:10)
+      at JSXParserMixin.jsxParseElementAt (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4741:36)
+      at JSXParserMixin.jsxParseElementAt (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4728:32)
+      at JSXParserMixin.jsxParseElementAt (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4728:32)
+      at JSXParserMixin.jsxParseElementAt (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4728:32)
+      at JSXParserMixin.jsxParseElement (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4779:17)
+      at JSXParserMixin.parseExprAtom (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4789:19)
+      at JSXParserMixin.parseExprSubscripts (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11061:21)
+      at JSXParserMixin.parseMaybeUnary (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11041:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10894:61)
+      at JSXParserMixin.parseExprOps (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10899:23)
+      at JSXParserMixin.parseMaybeConditional (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10876:23)
+      at JSXParserMixin.parseMaybeAssign (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10826:21)
+      at /Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10795:39
+      at JSXParserMixin.allowInAnd (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12427:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10795:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12494:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11674:28)
+      at JSXParserMixin.parseExprAtom (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11326:23)
+      at JSXParserMixin.parseExprAtom (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4794:20)
+      at JSXParserMixin.parseExprSubscripts (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11061:21)
+      at JSXParserMixin.parseMaybeUnary (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11041:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10894:61)
+      at JSXParserMixin.parseExprOps (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10899:23)
+      at JSXParserMixin.parseMaybeConditional (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10876:23)
+      at JSXParserMixin.parseMaybeAssign (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10826:21)
+      at JSXParserMixin.parseExpressionBase (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10779:23)
+      at /Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10775:39
+      at JSXParserMixin.allowInAnd (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12422:16)
+      at JSXParserMixin.parseExpression (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:10775:17)
+      at JSXParserMixin.parseReturnStatement (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:13142:28)
+      at JSXParserMixin.parseStatementContent (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12798:21)
+      at JSXParserMixin.parseStatementLike (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12767:17)
+      at JSXParserMixin.parseStatementListItem (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12747:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:13316:61)
+      at JSXParserMixin.parseBlockBody (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:13309:10)
+      at JSXParserMixin.parseBlock (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:13297:10)
+      at JSXParserMixin.parseFunctionBody (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12101:24)
+      at JSXParserMixin.parseArrowExpression (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:12076:10)
+      at JSXParserMixin.parseParenAndDistinguishExpression (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11686:12)
+      at JSXParserMixin.parseExprAtom (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11326:23)
+      at JSXParserMixin.parseExprAtom (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:4794:20)
+      at JSXParserMixin.parseExprSubscripts (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/Users/shaankapoor/projects/FinTherapy/node_modules/@babel/parser/lib/index.js:11061:21)

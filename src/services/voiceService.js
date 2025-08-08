@@ -7,6 +7,7 @@ class VoiceService {
     this.provider = 'browser'; // default to browser
     this.openaiApiKey = null;
     this.elevenLabsApiKey = null;
+    this.currentAudio = null; // Track current audio for stopping
     
     // Voice configuration
     this.config = {
@@ -116,17 +117,22 @@ class VoiceService {
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      
+      // Store reference for stopping
+      this.currentAudio = audio;
 
       console.log('🔊 Playing OpenAI generated audio');
 
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl); // Clean up
+        this.currentAudio = null;
         console.log('✅ OpenAI audio playback completed');
         onEnd?.();
       };
 
       audio.onerror = (error) => {
         URL.revokeObjectURL(audioUrl);
+        this.currentAudio = null;
         console.error('❌ Audio playback error:', error);
         onError?.(error);
       };
@@ -257,10 +263,20 @@ class VoiceService {
 
   // Stop current speech
   stop() {
+    console.log('🛑 Stopping current speech...');
+    
+    // Stop browser TTS
     if (this.provider === 'browser' && window.speechSynthesis) {
       speechSynthesis.cancel();
     }
-    // For API-based providers, we'd store the current audio element and stop it
+    
+    // Stop OpenAI/API audio
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+      console.log('🛑 Stopped OpenAI audio');
+    }
   }
 
   // Switch provider (useful for settings or upgrades)

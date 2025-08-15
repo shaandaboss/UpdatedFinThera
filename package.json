@@ -1,6 +1,6 @@
 {
   "name": "financial-therapy-platform",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A comprehensive financial therapy and planning platform",
   "main": "index.js",
   "scripts": {

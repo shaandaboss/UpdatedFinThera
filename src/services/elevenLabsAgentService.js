@@ -25,9 +25,36 @@ class ElevenLabsAgentService {
   }
 
   // Initialize with API key
-  initialize(apiKey) {
+  initialize(apiKey = 'sk_3fa9899ceffa2a23d809779919241a6594be1c86ae12c84a') {
     this.apiKey = apiKey;
-    console.log('🤖 ElevenLabs Agent Service initialized');
+    console.log('🤖 ElevenLabs Agent Service initialized with API key');
+  }
+
+  // Test API connectivity
+  async testApiConnection() {
+    try {
+      console.log('🧪 Testing basic API connectivity...');
+      const response = await fetch('https://api.elevenlabs.io/v1/user', {
+        headers: {
+          'xi-api-key': this.apiKey
+        }
+      });
+      
+      console.log('🧪 User API response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ API test successful:', data);
+        return { success: true, data };
+      } else {
+        const errorText = await response.text();
+        console.error('❌ API test failed:', errorText);
+        return { success: false, error: `${response.status} - ${errorText}` };
+      }
+    } catch (error) {
+      console.error('❌ API test error:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   // Start conversation with the agent
@@ -37,31 +64,39 @@ class ElevenLabsAgentService {
     }
 
     try {
-      // Create a new conversation session
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/conversations', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': this.apiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          agent_id: this.agentId
-        })
-      });
+      console.log('🔗 Starting conversation with agent:', this.agentId);
+      
+      try {
+        // First, try to get signed URL for WebSocket connection (for private agents)
+        console.log('🔐 Attempting signed URL approach...');
+        const signedUrlResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${this.agentId}`, {
+          method: 'GET',
+          headers: {
+            'xi-api-key': this.apiKey
+          }
+        });
 
-      if (!response.ok) {
-        throw new Error(`Failed to create conversation: ${response.status}`);
+        console.log('📡 Signed URL Response status:', signedUrlResponse.status);
+        
+        if (signedUrlResponse.ok) {
+          const signedUrlData = await signedUrlResponse.json();
+          console.log('📦 Signed URL data:', signedUrlData);
+          
+          this.signedUrl = signedUrlData.signed_url;
+          console.log('✅ Got signed URL, connecting to WebSocket...');
+        } else {
+          console.log('⚠️ Signed URL failed, trying direct connection...');
+          this.signedUrl = null;
+        }
+      } catch (signedUrlError) {
+        console.log('⚠️ Signed URL error, trying direct connection:', signedUrlError.message);
+        this.signedUrl = null;
       }
-
-      const data = await response.json();
-      this.conversationId = data.conversation_id;
       
-      console.log('✅ Conversation started:', this.conversationId);
-      
-      // Connect to WebSocket for real-time communication
+      // Connect to WebSocket (either with signed URL or direct)
       await this.connectWebSocket();
       
-      return this.conversationId;
+      return this.signedUrl || 'direct_connection';
     } catch (error) {
       console.error('❌ Failed to start conversation:', error);
       this.onError?.(error);
@@ -71,8 +106,10 @@ class ElevenLabsAgentService {
 
   // Connect to WebSocket for real-time communication
   async connectWebSocket() {
-    const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversations/${this.conversationId}/ws?xi_api_key=${this.apiKey}`;
+    // Use signed URL if available, otherwise direct connection for public agents
+    const wsUrl = this.signedUrl || `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${this.agentId}`;
     
+    console.log('🔌 Connecting to WebSocket:', wsUrl);
     this.websocket = new WebSocket(wsUrl);
     
     this.websocket.onopen = () => {
@@ -106,7 +143,12 @@ class ElevenLabsAgentService {
   async handleWebSocketMessage(data) {
     switch (data.type) {
       case 'conversation_initiation_metadata':
-        console.log('🎯 Conversation initiated');
+        console.log('🎯 Conversation initiated:', data);
+        // Extract conversation ID from metadata
+        if (data.conversation_initiation_metadata_event?.conversation_id) {
+          this.conversationId = data.conversation_initiation_metadata_event.conversation_id;
+          console.log('📝 Conversation ID:', this.conversationId);
+        }
         break;
         
       case 'audio':

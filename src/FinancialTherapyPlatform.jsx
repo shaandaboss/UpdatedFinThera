@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import voiceService from './services/voiceService';
+import elevenLabsAgentService from './services/elevenLabsAgentService';
 import ConversationPage from './ConversationPage';
 import ConversationPageWithAgent from './ConversationPageWithAgent';
+import SimpleConversationPage from './SimpleConversationPage';
 import ActionPlanPage from './ActionPlanPage';
 import BudgetBuilderPage from './BudgetBuilderPage';
 import GoalTrackerPage from './GoalTrackerPage';
@@ -30,13 +32,14 @@ const FinancialTherapyPlatform = () => {
   const [goalData, setGoalData] = useState(null);
   const [savingsData, setSavingsData] = useState(null);
   const [investmentData, setInvestmentData] = useState(null);
-  const [useElevenLabsAgent, setUseElevenLabsAgent] = useState(true); // Toggle for ElevenLabs agent
+  // Always use ElevenLabs agent - no toggle needed
+  const useElevenLabsAgent = true; // Always use ElevenLabs agent
   const [isRecording, setIsRecording] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [speechRecognition, setSpeechRecognition] = useState(null);
-  const [voiceProvider, setVoiceProvider] = useState('openai');
-  const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
+  const [voiceProvider, setVoiceProvider] = useState('elevenlabs');
+  const [apiKey, setApiKey] = useState(import.meta.env.VITE_ELEVENLABS_API_KEY || 'sk_3fa9899ceffa2a23d809779919241a6594be1c86ae12c84a');
   const [selectedVoice, setSelectedVoice] = useState('nova');
   const [archivedDropdownOpen, setArchivedDropdownOpen] = useState(false);
   
@@ -52,6 +55,11 @@ const FinancialTherapyPlatform = () => {
 
   // Initialize voice service with API key on mount
   useEffect(() => {
+    // Initialize ElevenLabs agent service
+    elevenLabsAgentService.initialize(apiKey);
+    console.log('🤖 ElevenLabs service initialized with API key');
+    
+    // Also initialize voice service for fallback
     if (apiKey) {
       voiceService.initialize({ openaiApiKey: apiKey });
     }
